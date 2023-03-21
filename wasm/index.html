@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+		WebAssembly.instantiateStreaming(fetch("drawing.wasm"))
+			.then(wasmModule => {
+				const result = wasmModule.instance.exports.main();
+				const text = document.createTextNode(result);
+				document.body.appendChild(text);
+			});
+	</script>
+</head>
+<body>
+</body>
+</html>

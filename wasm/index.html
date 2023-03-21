@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<script>
-		WebAssembly.instantiateStreaming(fetch("drawing.wasm"))
-			.then(wasmModule => {
-				const result = wasmModule.instance.exports.main();
-				const text = document.createTextNode(result);
-				document.body.appendChild(text);
-			});
-	</script>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+	<canvas id="app"></canvas>
+	<script src="index.js"></script>
 </body>
 </html>

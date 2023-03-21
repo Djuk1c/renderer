@@ -59,6 +59,9 @@ pub fn draw_line<const SIZE: usize>(
     let mut current_x: i32 = x1;
     let mut current_y: i32 = y1;
     loop {
+        if (current_x + current_y * WIDTH as i32) as usize >= WIDTH * HEIGHT {
+            return raster_info;
+        }
         pixels[(current_x + current_y * WIDTH as i32) as usize] = color;
 
         if current_x == x2 && current_y == y2 {

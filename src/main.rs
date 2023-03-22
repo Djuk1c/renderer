@@ -20,7 +20,7 @@ fn main() {
 
 fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
     pixels.fill(CLEAR_COLOR);
-    draw_line(pixels, 50, 50, 300, 400, RED);
+    draw_line(pixels, 50, 50, 300, 400, RED, None);
     draw_rectangle(pixels, 200, 200, 100, 100, RED, false);
     draw_rectangle(pixels, 400, 50, 100, 100, RED, true);
     draw_circle(pixels, 400, 400, 150, RED, false);
@@ -33,7 +33,7 @@ fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
 #[no_mangle]
 pub extern "C" fn wasm_get_pixels(frame: u32, _delta: f32) -> u32 {
     let mut pixels = PIXELS.lock().unwrap();
-    let (speed, scale) = (8.0, 15.0);
+    let (speed, scale) = (8.0, 20.0);
     let sdelta = (((frame as f32) / speed).sin() * scale) as i32;
     let cdelta = (((frame as f32) / speed).cos() * scale) as i32;
 
@@ -67,6 +67,7 @@ pub extern "C" fn wasm_get_pixels(frame: u32, _delta: f32) -> u32 {
         325 + sdelta * 2,
         200,
         RED,
+        None,
     );
     draw_line(
         &mut pixels,
@@ -75,6 +76,7 @@ pub extern "C" fn wasm_get_pixels(frame: u32, _delta: f32) -> u32 {
         325 + -cdelta * 2,
         200,
         RED,
+        None,
     );
     draw_circle(&mut pixels, 80, 80, 40 + sdelta, RED, false);
     draw_circle(&mut pixels, 80, 80, 40 + -sdelta / 2, RED, true);

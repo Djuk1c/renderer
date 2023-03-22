@@ -1,5 +1,5 @@
 use crate::{HEIGHT, WIDTH};
-use std::{fs::File, io::Write};
+use std::{collections::hash_map::Entry, collections::HashMap, fs::File, io::Write};
 
 pub fn draw_triangle<const SIZE: usize>(
     pixels: &mut [u32; SIZE],
@@ -12,29 +12,24 @@ pub fn draw_triangle<const SIZE: usize>(
     color: u32,
     fill: bool,
 ) {
-    let a = draw_line(pixels, x1, y1, x2, y2, color);
-    let b = draw_line(pixels, x1, y1, x3, y3, color);
-    let c = draw_line(pixels, x3, y3, x2, y2, color);
+    let mut raster_data: HashMap<i32, (i32, i32)> = HashMap::new();
 
-    //println!("{}, {}, {}", a.len(), b.len(), c.len());
-
+    // For each draw point in lines
+    // Store the lowest and highest X for each Y
+    // Draw horizontal lines from that data
     if fill {
-        // Might be enough to loop once through the largest and smallest vector
-        for (ry1, rx1) in &a {
-            for (ry2, rx2) in &b {
-                draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
-            }
+        draw_line(pixels, x1, y1, x2, y2, color, Some(&mut raster_data));
+        draw_line(pixels, x1, y1, x3, y3, color, Some(&mut raster_data));
+        draw_line(pixels, x3, y3, x2, y2, color, Some(&mut raster_data));
+
+        // Fill the triangle
+        for (y, (min_x, max_x)) in raster_data {
+            draw_line(pixels, min_x, y, max_x, y, color, None);
         }
-        //for (ry1, rx1) in &b {
-        //    for (ry2, rx2) in &c {
-        //        draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
-        //    }
-        //}
-        //for (ry1, rx1) in &a {
-        //    for (ry2, rx2) in &c {
-        //        draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
-        //    }
-        //}
+    } else {
+        draw_line(pixels, x1, y1, x2, y2, color, None);
+        draw_line(pixels, x1, y1, x3, y3, color, None);
+        draw_line(pixels, x3, y3, x2, y2, color, None);
     }
 }
 
@@ -45,27 +40,41 @@ pub fn draw_line<const SIZE: usize>(
     x2: i32,
     y2: i32,
     color: u32,
-) -> Vec<(i32, i32)> {
+    mut raster_data: Option<&mut HashMap<i32, (i32, i32)>>,
+) {
     let dx: i32 = i32::abs(x2 - x1);
     let dy: i32 = i32::abs(y2 - y1);
     let sx: i32 = if x1 < x2 { 1 } else { -1 };
     let sy: i32 = if y1 < y2 { 1 } else { -1 };
 
-    // Records points where Y changes, so i can later draw horizontal lines to fill in the rec
-    // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-    let mut raster_info = Vec::new();
-
     let mut error: i32 = (if dx > dy { dx } else { -dy }) / 2;
     let mut current_x: i32 = x1;
     let mut current_y: i32 = y1;
+
     loop {
         if (current_x + current_y * WIDTH as i32) as usize >= WIDTH * HEIGHT {
-            return raster_info;
+            return;
         }
         pixels[(current_x + current_y * WIDTH as i32) as usize] = color;
 
+        // Scanline
+        // Store min_x and max_y for each Y, so i can later draw hor lines and fill the triangle
+        // https://www.youtube.com/watch?v=t7Ztio8cwqM
+        if raster_data.is_some() {
+            let raster_data = raster_data.as_mut().unwrap();
+            match raster_data.entry(current_y) {
+                Entry::Occupied(o) => {
+                    let cur = o.into_mut();
+                    cur.0 = if current_x < cur.0 { current_x } else { cur.0 };
+                    cur.1 = if current_x > cur.1 { current_x } else { cur.1 };
+                    cur
+                }
+                Entry::Vacant(v) => v.insert((current_x, current_x)),
+            };
+        }
+
         if current_x == x2 && current_y == y2 {
-            return raster_info;
+            return;
         }
         let error2: i32 = error;
 
@@ -76,7 +85,6 @@ pub fn draw_line<const SIZE: usize>(
         if error2 < dy {
             error += dx;
             current_y += sy;
-            raster_info.push((current_y, current_x));
         }
     }
 }

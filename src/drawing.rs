@@ -25,16 +25,16 @@ pub fn draw_triangle<const SIZE: usize>(
                 draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
             }
         }
-        for (ry1, rx1) in &b {
-            for (ry2, rx2) in &c {
-                draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
-            }
-        }
-        for (ry1, rx1) in &a {
-            for (ry2, rx2) in &c {
-                draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
-            }
-        }
+        //for (ry1, rx1) in &b {
+        //    for (ry2, rx2) in &c {
+        //        draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
+        //    }
+        //}
+        //for (ry1, rx1) in &a {
+        //    for (ry2, rx2) in &c {
+        //        draw_line(pixels, *rx1, *ry1, *rx2, *ry2, color);
+        //    }
+        //}
     }
 }
 
@@ -114,24 +114,24 @@ pub fn draw_circle<const SIZE: usize>(
 
 pub fn draw_rectangle<const SIZE: usize>(
     pixels: &mut [u32; SIZE],
-    x: u32,
-    y: u32,
-    w: u32,
-    h: u32,
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
     color: u32,
     fill: bool,
 ) {
     for ry in y..y + h {
-        if 0 < ry && ry < HEIGHT as u32 {
+        if 0 < ry && ry < HEIGHT as i32 {
             for rx in x..x + w {
-                if 0 < rx && rx < WIDTH as u32 {
+                if 0 < rx && rx < WIDTH as i32 {
                     if !fill {
                         // TODO: Lots of wasted iterations, perhaps a faster algorithm exists
                         if ry == y || ry == y + h - 1 || rx == x || rx == x + h - 1 {
-                            pixels[(rx + ry * WIDTH as u32) as usize] = color;
+                            pixels[(rx + ry * WIDTH as i32) as usize] = color;
                         }
                     } else {
-                        pixels[(rx + ry * WIDTH as u32) as usize] = color;
+                        pixels[(rx + ry * WIDTH as i32) as usize] = color;
                     }
                 }
             }

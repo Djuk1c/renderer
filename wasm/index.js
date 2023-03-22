@@ -13,22 +13,66 @@ function make_environment(...envs) {
 }
 
 let app = document.getElementById("app");
-let ctx = app.getContext("2d");
-console.log(ctx);
+let ctx = app.getContext("2d", {alpha: false});
 
-WebAssembly.instantiateStreaming(fetch("drawing.wasm"), {
-	"env": make_environment()
-})
-	.then(wasmModule => {
-		console.log(wasmModule);
-		const width = wasmModule.instance.exports.wasm_get_width();
-		const height = wasmModule.instance.exports.wasm_get_height();
-		const pixels = wasmModule.instance.exports.wasm_get_pixels();
+async function o_renderDemo() {
+	WebAssembly.instantiateStreaming(fetch("drawing.wasm"), {
+		"env": make_environment()
+	})
+		.then(wasmModule => {
+			//console.log(wasmModule);
+			const width = wasmModule.instance.exports.wasm_get_width();
+			const height = wasmModule.instance.exports.wasm_get_height();
+			app.width = width;
+			app.height = height;
+
+			let i = 0;
+			function myLoop() {
+				setTimeout(function() {
+					const pixels = wasmModule.instance.exports.wasm_get_pixels(i);
+					const buffer = wasmModule.instance.exports.memory.buffer;
+					const image = new ImageData(new Uint8ClampedArray(buffer, pixels, width * height * 4), width);
+
+					ctx.putImageData(image, 0, 0);
+					i++;
+					myLoop();
+				}, 1)
+			}
+			myLoop();
+		});
+}
+
+async function renderDemo() {
+	const wasmModule = await WebAssembly.instantiateStreaming(fetch("drawing.wasm"), {
+		"env": make_environment()
+	});
+	const width = wasmModule.instance.exports.wasm_get_width();
+	const height = wasmModule.instance.exports.wasm_get_height();
+	app.width = width;
+	app.height = height;
+
+	function render(i) {
+		const pixels = wasmModule.instance.exports.wasm_get_pixels(i);
 		const buffer = wasmModule.instance.exports.memory.buffer;
-		console.log(new Uint8Array(buffer, pixels, width * height * 4));
 		const image = new ImageData(new Uint8ClampedArray(buffer, pixels, width * height * 4), width);
 
-		app.width = width;
-		app.height = height;
 		ctx.putImageData(image, 0, 0);
-	});
+	}
+    let prev = null;
+	let i = 0;
+    function first(timestamp) {
+        prev = timestamp;
+        render(0);
+        window.requestAnimationFrame(loop);
+    }
+    function loop(timestamp) {
+        const dt = timestamp - prev;
+		console.log(i, dt);
+		i++;
+        prev = timestamp;
+        render(i, dt);
+        window.requestAnimationFrame(loop);
+    }
+	window.requestAnimationFrame(first);
+}
+renderDemo();

@@ -52,7 +52,7 @@ async function renderDemo() {
 	app.height = height;
 
 	function render(i) {
-		const pixels = wasmModule.instance.exports.wasm_get_pixels(i);
+		const pixels = wasmModule.instance.exports.wasm_cube_test(i, 0.0);
 		const buffer = wasmModule.instance.exports.memory.buffer;
 		const image = new ImageData(new Uint8ClampedArray(buffer, pixels, width * height * 4), width);
 

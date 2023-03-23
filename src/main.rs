@@ -9,6 +9,7 @@ use std::sync::Mutex;
 const WIDTH: usize = 400;
 const HEIGHT: usize = 400;
 const RED: u32 = 0xFF2020FF;
+const GREEN: u32 = 0xFF20FF20;
 const CLEAR_COLOR: u32 = 0xFF101010;
 
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; 160000]);
@@ -141,7 +142,7 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
             tri_projected.pos[1].y as i32,
             tri_projected.pos[2].x as i32,
             tri_projected.pos[2].y as i32,
-            RED,
+            GREEN,
             false,
         );
     }

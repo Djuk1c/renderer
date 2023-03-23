@@ -67,7 +67,7 @@ async function renderDemo() {
     }
     function loop(timestamp) {
         const dt = timestamp - prev;
-		console.log(i, dt);
+		//console.log(i, dt);
 		i++;
         prev = timestamp;
         render(i, dt);

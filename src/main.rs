@@ -3,10 +3,12 @@ use mesh::*;
 mod drawing;
 mod mesh;
 
-//use glam::{vec4, Mat4, Vec3};
-use glam::*;
+use glam::{Mat4, Vec3, Vec4Swizzles};
 use std::f32::consts::PI;
 use std::sync::Mutex;
+
+// TODO:
+// Z Buffer, Face culling, Color interpolation, Index buffer, Normals and lighting
 
 const WIDTH: usize = 400;
 const HEIGHT: usize = 400;
@@ -58,15 +60,12 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
 
     for (i, tri) in cube.triangles.iter().enumerate() {
         // Translate the triangle
-        let p1 = Vec3::new(tri.pos[0].x, tri.pos[0].y, tri.pos[0].z);
-        let p2 = Vec3::new(tri.pos[1].x, tri.pos[1].y, tri.pos[1].z);
-        let p3 = Vec3::new(tri.pos[2].x, tri.pos[2].y, tri.pos[2].z);
         let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, -5.0))
             * Mat4::from_rotation_z(0.0)
             * Mat4::from_rotation_y(frame as f32 / 20.0);
-        let p1 = mat_model * p1.extend(1.0);
-        let p2 = mat_model * p2.extend(1.0);
-        let p3 = mat_model * p3.extend(1.0);
+        let p1 = mat_model * tri.pos[0].extend(1.0);
+        let p2 = mat_model * tri.pos[1].extend(1.0);
+        let p3 = mat_model * tri.pos[2].extend(1.0);
 
         // Project it
         let mut p1 = mat_proj.project_point3(p1.xyz());

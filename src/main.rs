@@ -1,9 +1,11 @@
 use drawing::*;
-use math::*;
+use mesh::*;
 mod drawing;
-mod math;
+mod mesh;
 
-use std::f64::consts::PI;
+//use glam::{vec4, Mat4, Vec3};
+use glam::*;
+use std::f32::consts::PI;
 use std::sync::Mutex;
 
 const WIDTH: usize = 400;
@@ -15,14 +17,14 @@ const CLEAR_COLOR: u32 = 0xFF101010;
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; 160000]);
 
 fn main() {
-    let mut pixels = PIXELS.lock().unwrap();
-    test_scene(&mut pixels);
-    save_to_ppm(*pixels);
+    //test_scene(&mut pixels);
 
-    //wasm_get_pixels(173, 0.33);
+    wasm_cube_test(173, 0.33);
+    save_to_ppm(*PIXELS.lock().unwrap());
     return;
 }
 
+#[allow(dead_code)]
 fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
     pixels.fill(CLEAR_COLOR);
     draw_line(pixels, 50, 50, 300, 400, RED, None);
@@ -39,113 +41,68 @@ fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
 pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
     let mut pixels = PIXELS.lock().unwrap();
     pixels.fill(CLEAR_COLOR);
+
+    // Create this once
     let (speed, scale) = (20.0, 1.3);
     let sdelta = ((frame as f32) / speed).sin() * scale;
     let cdelta = ((frame as f32) / speed).cos() * scale;
-    let mut cube = Mesh::new();
-    let mut mat_proj = Mat4x4::new();
+    let cube = Mesh::cube();
 
-    // South
-    cube.triangles
-        .push(Triangle::new(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0));
-    cube.triangles
-        .push(Triangle::new(0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0));
-    // East
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0));
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0));
-    // North
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0));
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0));
-    // West
-    cube.triangles
-        .push(Triangle::new(0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0));
-    cube.triangles
-        .push(Triangle::new(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0));
-    // Top
-    cube.triangles
-        .push(Triangle::new(0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0));
-    cube.triangles
-        .push(Triangle::new(0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0));
-    // Bottom
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0));
-    cube.triangles
-        .push(Triangle::new(1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0));
+    let fov = 90.0;
+    let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
+    let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
+    let near = 0.1;
+    let far = 1000.0;
+    let mat_proj = Mat4::perspective_rh_gl(fov_rad, aspect_ratio, near, far);
+    //
 
-    let f_near = 0.1;
-    let f_far = 1000.0;
-    let f_fov = 90.0;
-    let f_aspect_ratio = HEIGHT as f32 / WIDTH as f32;
-    let f_fov_rad = (1.0 / (f_fov * 0.5 / 180.0 * PI).tan()) as f32;
+    for (i, tri) in cube.triangles.iter().enumerate() {
+        // Translate the triangle
+        let p1 = Vec3::new(tri.pos[0].x, tri.pos[0].y, tri.pos[0].z);
+        let p2 = Vec3::new(tri.pos[1].x, tri.pos[1].y, tri.pos[1].z);
+        let p3 = Vec3::new(tri.pos[2].x, tri.pos[2].y, tri.pos[2].z);
+        let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, -5.0))
+            * Mat4::from_rotation_z(0.0)
+            * Mat4::from_rotation_y(frame as f32 / 20.0);
+        let p1 = mat_model * p1.extend(1.0);
+        let p2 = mat_model * p2.extend(1.0);
+        let p3 = mat_model * p3.extend(1.0);
 
-    fn multiply_matrix_vector(i: &Vec3, o: &mut Vec3, m: &Mat4x4) {
-        o.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
-        o.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
-        o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
-        let w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
-
-        if w != 0.0 {
-            o.x /= w;
-            o.y /= w;
-            o.z /= w;
-        }
-    }
-
-    mat_proj.m[0][0] = f_aspect_ratio * f_fov_rad;
-    mat_proj.m[1][1] = f_fov_rad;
-    mat_proj.m[2][2] = f_far / (f_far - f_near);
-    mat_proj.m[3][2] = (-f_far * f_near) / (f_far - f_near);
-    mat_proj.m[2][3] = 1.0;
-    mat_proj.m[3][3] = 0.0;
-
-    for tri in cube.triangles {
-        let mut tri_projected = Triangle::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        let tri_translated = Triangle::new(
-            tri.pos[0].x - 0.5 + sdelta * cdelta,
-            tri.pos[0].y + cdelta,
-            tri.pos[0].z + 3.0 + sdelta / 2.0,
-            tri.pos[1].x - 0.5 + sdelta * cdelta,
-            tri.pos[1].y + cdelta,
-            tri.pos[1].z + 3.0 + sdelta / 2.0,
-            tri.pos[2].x - 0.5 + sdelta * cdelta,
-            tri.pos[2].y + cdelta,
-            tri.pos[2].z + 3.0 + sdelta / 2.0,
-        );
-
-        multiply_matrix_vector(&tri_translated.pos[0], &mut tri_projected.pos[0], &mat_proj);
-        multiply_matrix_vector(&tri_translated.pos[1], &mut tri_projected.pos[1], &mat_proj);
-        multiply_matrix_vector(&tri_translated.pos[2], &mut tri_projected.pos[2], &mat_proj);
+        // Project it
+        let mut p1 = mat_proj.project_point3(p1.xyz());
+        let mut p2 = mat_proj.project_point3(p2.xyz());
+        let mut p3 = mat_proj.project_point3(p3.xyz());
 
         // Scale into view
-        tri_projected.pos[0].x += 1.0;
-        tri_projected.pos[0].y += 1.0;
-        tri_projected.pos[1].x += 1.0;
-        tri_projected.pos[1].y += 1.0;
-        tri_projected.pos[2].x += 1.0;
-        tri_projected.pos[2].y += 1.0;
-        tri_projected.pos[0].x *= 0.5 * WIDTH as f32;
-        tri_projected.pos[0].y *= 0.5 * HEIGHT as f32;
-        tri_projected.pos[1].x *= 0.5 * WIDTH as f32;
-        tri_projected.pos[1].y *= 0.5 * HEIGHT as f32;
-        tri_projected.pos[2].x *= 0.5 * WIDTH as f32;
-        tri_projected.pos[2].y *= 0.5 * HEIGHT as f32;
+        p1.x += 1.0;
+        p1.y += 1.0;
+        p1.x *= 0.5 * WIDTH as f32;
+        p1.y *= 0.5 * HEIGHT as f32;
 
+        p2.x += 1.0;
+        p2.y += 1.0;
+        p2.x *= 0.5 * WIDTH as f32;
+        p2.y *= 0.5 * HEIGHT as f32;
+
+        p3.x += 1.0;
+        p3.y += 1.0;
+        p3.x *= 0.5 * WIDTH as f32;
+        p3.y *= 0.5 * HEIGHT as f32;
+
+        // Draw
         draw_triangle(
             &mut pixels,
-            tri_projected.pos[0].x as i32,
-            tri_projected.pos[0].y as i32,
-            tri_projected.pos[1].x as i32,
-            tri_projected.pos[1].y as i32,
-            tri_projected.pos[2].x as i32,
-            tri_projected.pos[2].y as i32,
-            GREEN,
+            p1.x as i32,
+            p1.y as i32,
+            p2.x as i32,
+            p2.y as i32,
+            p3.x as i32,
+            p3.y as i32,
+            GREEN / (i + 1) as u32,
             false,
         );
     }
+
     return pixels.as_ptr() as u32;
 }
 

@@ -4,6 +4,7 @@ mod drawing;
 mod mesh;
 
 use glam::{Mat4, Vec3, Vec4Swizzles};
+use std::cmp::Ordering;
 use std::f32::consts::PI;
 use std::sync::Mutex;
 
@@ -62,12 +63,10 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
     let far = 1000.0;
     let mat_proj = Mat4::perspective_lh(fov_rad, aspect_ratio, near, far);
     //
+    let mut to_render: Vec<(Triangle, u32)> = vec![];
 
     for (_i, tri) in cube.triangles.iter().enumerate() {
         // Translate the triangle
-        //let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, -10.0))
-        //    * Mat4::from_rotation_y(frame as f32 / 20.0)
-        //    * Mat4::from_rotation_z(0.0);
         let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, -120.0))
             * Mat4::from_rotation_y(frame as f32 / 20.0);
         let p1 = mat_model * tri.pos[0].extend(1.0);
@@ -111,16 +110,30 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
         p3.x *= 0.5 * WIDTH as f32;
         p3.y *= 0.5 * HEIGHT as f32;
 
+        to_render.push((
+            Triangle::new(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z),
+            c,
+        ));
+    }
+
+    // Painters algorithm, depth sorting
+    to_render.sort_by(|a, b| {
+        let z1 = (a.0.pos[0].z + a.0.pos[1].z + a.0.pos[2].z) / 3.0;
+        let z2 = (b.0.pos[0].z + b.0.pos[1].z + b.0.pos[2].z) / 3.0;
+        z1.total_cmp(&z2)
+    });
+
+    for tri in to_render {
         // Draw
         draw_triangle(
             &mut pixels,
-            p1.x as i32,
-            p1.y as i32,
-            p2.x as i32,
-            p2.y as i32,
-            p3.x as i32,
-            p3.y as i32,
-            c,
+            tri.0.pos[0].x as i32,
+            tri.0.pos[0].y as i32,
+            tri.0.pos[1].x as i32,
+            tri.0.pos[1].y as i32,
+            tri.0.pos[2].x as i32,
+            tri.0.pos[2].y as i32,
+            tri.1,
             true,
         );
     }

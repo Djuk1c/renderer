@@ -14,15 +14,17 @@ const WIDTH: usize = 400;
 const HEIGHT: usize = 400;
 const RED: u32 = 0xFF2020FF;
 const GREEN: u32 = 0xFF20FF20;
+const WHITE: u32 = 0xFFFFFFFF;
 const CLEAR_COLOR: u32 = 0xFF101010;
 
-static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; 160000]);
+static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; WIDTH * HEIGHT]);
 
 fn main() {
     //test_scene(&mut pixels);
 
-    wasm_cube_test(173, 0.33);
+    wasm_cube_test(0, 0.16);
     save_to_ppm(*PIXELS.lock().unwrap());
+    //let test = Mesh::from_obj("model/fish.obj");
     return;
 }
 
@@ -46,26 +48,47 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
 
     // Create this once
     let (speed, scale) = (20.0, 1.3);
-    let sdelta = ((frame as f32) / speed).sin() * scale;
-    let cdelta = ((frame as f32) / speed).cos() * scale;
-    let cube = Mesh::cube();
+    let _sdelta = ((frame as f32) / speed).sin() * scale;
+    let _cdelta = ((frame as f32) / speed).cos() * scale;
+    //let cube = Mesh::cube();
+    //let cube = Mesh::from_obj("models/cow.obj");
+    //println!("{}", cube.triangles.len());
+    let cube = Mesh::cow();
 
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
     let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
     let near = 0.1;
     let far = 1000.0;
-    let mat_proj = Mat4::perspective_rh_gl(fov_rad, aspect_ratio, near, far);
+    let mat_proj = Mat4::perspective_lh(fov_rad, aspect_ratio, near, far);
     //
 
-    for (i, tri) in cube.triangles.iter().enumerate() {
+    for (_i, tri) in cube.triangles.iter().enumerate() {
         // Translate the triangle
-        let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, -5.0))
-            * Mat4::from_rotation_z(0.0)
+        //let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, -10.0))
+        //    * Mat4::from_rotation_y(frame as f32 / 20.0)
+        //    * Mat4::from_rotation_z(0.0);
+        let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, -120.0))
             * Mat4::from_rotation_y(frame as f32 / 20.0);
         let p1 = mat_model * tri.pos[0].extend(1.0);
         let p2 = mat_model * tri.pos[1].extend(1.0);
         let p3 = mat_model * tri.pos[2].extend(1.0);
+
+        // Calculate normals
+        let line1 = p2 - p1;
+        let line2 = p3 - p1;
+        let normal = Vec3::cross(line1.xyz(), line2.xyz()).normalize();
+
+        // Skip if side is invisible (Culling)
+        let vcamera = Vec3::new(0.0, 0.0, 0.0);
+        if Vec3::dot(normal, p1.xyz() - vcamera) >= 0.0 {
+            continue;
+        }
+
+        // Shading
+        let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
+        let lit = Vec3::dot(normal, dir_light).abs();
+        let c = (RED & !0xFF) | (255.0 * lit) as u32;
 
         // Project it
         let mut p1 = mat_proj.project_point3(p1.xyz());
@@ -97,8 +120,8 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
             p2.y as i32,
             p3.x as i32,
             p3.y as i32,
-            GREEN / (i + 1) as u32,
-            false,
+            c,
+            true,
         );
     }
 

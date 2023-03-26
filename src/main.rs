@@ -2,6 +2,7 @@ use drawing::*;
 use mesh::*;
 mod drawing;
 mod mesh;
+mod models;
 mod test;
 
 use glam::{Mat4, Vec3, Vec4Swizzles};

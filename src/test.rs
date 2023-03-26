@@ -39,7 +39,7 @@ fn render_test() {
     let mut event_pump = sdl_context.event_pump().unwrap();
     // End SDL Init
 
-    let cube = Mesh::cow();
+    let cube = Mesh::from_obj("models/cow.obj");
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
     let aspect_ratio = HEIGHT as f32 / WIDTH as f32;

@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 glam = "0.23.0"
+
+[dev-dependencies]
+sdl2 = "0.35.2"

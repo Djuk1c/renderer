@@ -2,17 +2,19 @@ use drawing::*;
 use mesh::*;
 mod drawing;
 mod mesh;
+mod test;
 
 use glam::{Mat4, Vec3, Vec4Swizzles};
-use std::cmp::Ordering;
 use std::f32::consts::PI;
 use std::sync::Mutex;
 
 // TODO:
-// Z Buffer, Face culling, Color interpolation, Index buffer, Normals and lighting
+// Z Buffer, Color interpolation
+// DONE:
+// Face culling, Depth sorting, Normals and lighting
 
-const WIDTH: usize = 400;
-const HEIGHT: usize = 400;
+const WIDTH: usize = 800;
+const HEIGHT: usize = 600;
 const RED: u32 = 0xFF2020FF;
 const GREEN: u32 = 0xFF20FF20;
 const WHITE: u32 = 0xFFFFFFFF;
@@ -24,8 +26,8 @@ fn main() {
     //test_scene(&mut pixels);
 
     wasm_cube_test(0, 0.16);
-    save_to_ppm(*PIXELS.lock().unwrap());
-    //let test = Mesh::from_obj("model/fish.obj");
+    //save_to_ppm(*PIXELS.lock().unwrap());
+    //let test = Mesh::from_obj("models/teapot.obj");
     return;
 }
 
@@ -49,12 +51,9 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
 
     // Create this once
     let (speed, scale) = (20.0, 1.3);
+    let cube = Mesh::cow();
     let _sdelta = ((frame as f32) / speed).sin() * scale;
     let _cdelta = ((frame as f32) / speed).cos() * scale;
-    //let cube = Mesh::cube();
-    //let cube = Mesh::from_obj("models/cow.obj");
-    //println!("{}", cube.triangles.len());
-    let cube = Mesh::cow();
 
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
@@ -87,7 +86,7 @@ pub extern "C" fn wasm_cube_test(frame: u32, _delta: f32) -> u32 {
         // Shading
         let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
         let lit = Vec3::dot(normal, dir_light).abs();
-        let c = (RED & !0xFF) | (255.0 * lit) as u32;
+        let c = (RED & !0xFF) | (255.0 * lit * 0.7) as u32;
 
         // Project it
         let mut p1 = mat_proj.project_point3(p1.xyz());

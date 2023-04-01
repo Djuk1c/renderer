@@ -131,7 +131,7 @@ fn render_test() {
             //    * Mat4::from_rotation_y(frame as f32 / 50.0);
 
             let mat_model = Mat4::from_translation(Vec3::new(30.0, 0.0, 80.0))
-                * Mat4::from_rotation_y(frame as f32 / 700.0);
+                * Mat4::from_rotation_y(frame as f32 / 500.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
             let p3 = mat_model * tri.pos[2].extend(1.0);
@@ -194,18 +194,6 @@ fn render_test() {
 
             // Draw
             for clip in clipped {
-                //draw_triangle(
-                //    &mut pixels,
-                //    clip.pos[0].x as i32,
-                //    clip.pos[0].y as i32,
-                //    clip.pos[1].x as i32,
-                //    clip.pos[1].y as i32,
-                //    clip.pos[2].x as i32,
-                //    clip.pos[2].y as i32,
-                //    tri.1,
-                //    true,
-                //);
-                // Wireframe
                 draw_triangle(
                     &mut pixels,
                     clip.pos[0].x as i32,
@@ -214,9 +202,21 @@ fn render_test() {
                     clip.pos[1].y as i32,
                     clip.pos[2].x as i32,
                     clip.pos[2].y as i32,
-                    GREEN,
-                    false,
+                    tri.1,
+                    true,
                 );
+                // Wireframe
+                //draw_triangle(
+                //    &mut pixels,
+                //    clip.pos[0].x as i32,
+                //    clip.pos[0].y as i32,
+                //    clip.pos[1].x as i32,
+                //    clip.pos[1].y as i32,
+                //    clip.pos[2].x as i32,
+                //    clip.pos[2].y as i32,
+                //    GREEN,
+                //    false,
+                //);
             }
         }
         let duration = start.elapsed();

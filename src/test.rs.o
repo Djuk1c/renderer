@@ -38,15 +38,13 @@ fn render_test() {
     let mut event_pump = sdl_context.event_pump().unwrap();
     // End SDL Init
 
-    // Model and proj matrix
-    //let cube = Mesh::cube;
     let cube = Mesh::from_obj("models/cow.obj");
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
     let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
     let near = 0.1;
     let far = 1000.0;
-    let mat_proj = Mat4::perspective_rh(fov_rad, aspect_ratio, near, far);
+    let mat_proj = Mat4::perspective_lh(fov_rad, aspect_ratio, near, far);
     let mut frame = 0;
 
     // Clipping functions
@@ -120,18 +118,15 @@ fn render_test() {
         }
 
         // RENDER LOOP
+        frame += 1;
         let mut to_render: Vec<(Triangle, u32)> = vec![];
         let start = Instant::now();
         pixels.fill(CLEAR_COLOR);
 
-        frame += 1;
         for (_i, tri) in cube.triangles.iter().enumerate() {
             // Translate the triangle
-            //let mat_model = Mat4::from_translation(Vec3::new(3.0, 0.0, 10.0))
-            //    * Mat4::from_rotation_y(frame as f32 / 50.0);
-
-            let mat_model = Mat4::from_translation(Vec3::new(30.0, 0.0, 80.0))
-                * Mat4::from_rotation_y(frame as f32 / 700.0);
+            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, -110.0))
+                * Mat4::from_rotation_y(frame as f32 / 55.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
             let p3 = mat_model * tri.pos[2].extend(1.0);
@@ -152,29 +147,34 @@ fn render_test() {
             let lit = Vec3::dot(normal, dir_light).abs();
             let c = (RED & !0xFF) | (255.0 * lit) as u32;
 
-            // Clipping near plane
-            let tri_to_clip = Triangle::new_vec(p1.xyz(), p2.xyz(), p3.xyz());
-            let mut clipped = clip_triangle(&tri_to_clip, &Vec3::new(0.0, 0.0, 0.1), &Vec3::new(0.0, 0.0, 1.0));
+            // Clipping
+            let clipped = clip_triangle(tri, &Vec3::new(0.0, 0.0, 0.3), &Vec3::new(0.0, 0.0, 1.0));
 
-            for mut tri_c in clipped.iter_mut() {
-                // Project it
-                tri_c.pos[0] = mat_proj.project_point3(tri_c.pos[0]);
-                tri_c.pos[1] = mat_proj.project_point3(tri_c.pos[1]);
-                tri_c.pos[2] = mat_proj.project_point3(tri_c.pos[2]);
+            // Project it
+            let mut p1 = mat_proj.project_point3(p1.xyz());
+            let mut p2 = mat_proj.project_point3(p2.xyz());
+            let mut p3 = mat_proj.project_point3(p3.xyz());
 
-                // Scale into view
-                for mut pos in tri_c.pos.iter_mut() {
-                    pos.x += 1.0;
-                    pos.y += 1.0;
-                    pos.x *= 0.5 * WIDTH as f32;
-                    pos.y *= 0.5 * HEIGHT as f32;
-                }
+            // Scale into view
+            p1.x += 1.0;
+            p1.y += 1.0;
+            p1.x *= 0.5 * WIDTH as f32;
+            p1.y *= 0.5 * HEIGHT as f32;
 
-                to_render.push((
-                    tri_c.clone(),
-                    c,
-                ));
-            }
+            p2.x += 1.0;
+            p2.y += 1.0;
+            p2.x *= 0.5 * WIDTH as f32;
+            p2.y *= 0.5 * HEIGHT as f32;
+
+            p3.x += 1.0;
+            p3.y += 1.0;
+            p3.x *= 0.5 * WIDTH as f32;
+            p3.y *= 0.5 * HEIGHT as f32;
+
+            to_render.push((
+                Triangle::new(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z),
+                c,
+            ));
         }
 
         // Painters algorithm, depth sorting
@@ -184,46 +184,27 @@ fn render_test() {
             z1.total_cmp(&z2)
         });
         let duration = start.elapsed();
-        println!("Time to do {} triangle calculations: {:?}", to_render.len(), duration);
+        println!("Time to do triangle calculation: {:?}", duration);
 
         let start = Instant::now();
         for tri in &to_render {
-            // Viewport clip
-            //let left_clip = clip_triangle(&tri.0, &Vec3::new(WIDTH as f32 - 1.0, 0.0, 0.0), &Vec3::new(-1.0, 0.0, 0.0));
-            let clipped = clip_triangle(&tri.0, &Vec3::new(0.0, 0.0, 0.0), &Vec3::new(1.0, 0.0, 0.0));
-
             // Draw
-            for clip in clipped {
-                //draw_triangle(
-                //    &mut pixels,
-                //    clip.pos[0].x as i32,
-                //    clip.pos[0].y as i32,
-                //    clip.pos[1].x as i32,
-                //    clip.pos[1].y as i32,
-                //    clip.pos[2].x as i32,
-                //    clip.pos[2].y as i32,
-                //    tri.1,
-                //    true,
-                //);
-                // Wireframe
-                draw_triangle(
-                    &mut pixels,
-                    clip.pos[0].x as i32,
-                    clip.pos[0].y as i32,
-                    clip.pos[1].x as i32,
-                    clip.pos[1].y as i32,
-                    clip.pos[2].x as i32,
-                    clip.pos[2].y as i32,
-                    GREEN,
-                    false,
-                );
-            }
+            draw_triangle(
+                &mut pixels,
+                tri.0.pos[0].x as i32,
+                tri.0.pos[0].y as i32,
+                tri.0.pos[1].x as i32,
+                tri.0.pos[1].y as i32,
+                tri.0.pos[2].x as i32,
+                tri.0.pos[2].y as i32,
+                tri.1,
+                true,
+            );
         }
         let duration = start.elapsed();
         println!("Time to fill the pixels: {:?}", duration);
 
-        // Draw on SDL 
-        // TODO: Optimize this
+        // Draw on SDL (Optimize this)
         let start = Instant::now();
         texture
             .with_lock(None, |buffer: &mut [u8], pitch: usize| {

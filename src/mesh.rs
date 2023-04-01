@@ -1,8 +1,8 @@
 use glam::Vec3;
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::path::Path;
 
+#[derive(Clone)]
 pub struct Triangle {
     pub pos: [Vec3; 3],
 }
@@ -23,6 +23,13 @@ impl Triangle {
                 Vec3::new(x1, y1, z1),
                 Vec3::new(x2, y2, z2),
                 Vec3::new(x3, y3, z3),
+            ],
+        }
+    }
+    pub fn new_vec(a: Vec3, b: Vec3, c: Vec3) -> Self {
+        Self {
+            pos: [
+                a, b, c
             ],
         }
     }
@@ -110,18 +117,18 @@ impl Mesh {
                     cache[(f[2] - 1) as usize].y,
                     cache[(f[2] - 1) as usize].z,
                 ));
-                println!(
-                    "obj.triangles.push(Triangle::new({},{},{},{},{},{},{},{},{}));",
-                    cache[(f[0] - 1) as usize].x,
-                    cache[(f[0] - 1) as usize].y,
-                    cache[(f[0] - 1) as usize].z,
-                    cache[(f[1] - 1) as usize].x,
-                    cache[(f[1] - 1) as usize].y,
-                    cache[(f[1] - 1) as usize].z,
-                    cache[(f[2] - 1) as usize].x,
-                    cache[(f[2] - 1) as usize].y,
-                    cache[(f[2] - 1) as usize].z,
-                );
+                //println!(
+                //    "obj.triangles.push(Triangle::new({},{},{},{},{},{},{},{},{}));",
+                //    cache[(f[0] - 1) as usize].x,
+                //    cache[(f[0] - 1) as usize].y,
+                //    cache[(f[0] - 1) as usize].z,
+                //    cache[(f[1] - 1) as usize].x,
+                //    cache[(f[1] - 1) as usize].y,
+                //    cache[(f[1] - 1) as usize].z,
+                //    cache[(f[2] - 1) as usize].x,
+                //    cache[(f[2] - 1) as usize].y,
+                //    cache[(f[2] - 1) as usize].z,
+                //);
             }
         }
 

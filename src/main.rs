@@ -24,11 +24,10 @@ const CLEAR_COLOR: u32 = 0xFF101010;
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; WIDTH * HEIGHT]);
 
 fn main() {
-    //test_scene(&mut pixels);
+    let mut pixels = PIXELS.lock().unwrap();
+    test_scene(&mut pixels);
 
-    wasm_cube_test(0, 0.16);
-    //save_to_ppm(*PIXELS.lock().unwrap());
-    //let test = Mesh::from_obj("models/teapot.obj");
+    save_to_ppm(*pixels);
     return;
 }
 

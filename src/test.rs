@@ -26,7 +26,7 @@ fn render_test() {
     let mut canvas = window
         .into_canvas()
         .present_vsync()
-        //.accelerated()
+        .accelerated()
         //.software()
         .build()
         .map_err(|e| e.to_string())
@@ -68,8 +68,8 @@ fn render_test() {
 
         for (_i, tri) in cube.triangles.iter().enumerate() {
             // Translate the triangle
-            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, -140.0))
-                * Mat4::from_rotation_y(frame as f32 / 15.0);
+            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, -110.0))
+                * Mat4::from_rotation_y(frame as f32 / 55.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
             let p3 = mat_model * tri.pos[2].extend(1.0);
@@ -88,7 +88,7 @@ fn render_test() {
             // Shading
             let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
             let lit = Vec3::dot(normal, dir_light).abs();
-            let c = (RED & !0xFF) | (255.0 * lit * 0.7) as u32;
+            let c = (RED & !0xFF) | (255.0 * lit) as u32;
 
             // Project it
             let mut p1 = mat_proj.project_point3(p1.xyz());
@@ -144,7 +144,7 @@ fn render_test() {
         let duration = start.elapsed();
         println!("Time to fill the pixels: {:?}", duration);
 
-        // Draw on SDL
+        // Draw on SDL (Optimize this)
         let start = Instant::now();
         texture
             .with_lock(None, |buffer: &mut [u8], pitch: usize| {

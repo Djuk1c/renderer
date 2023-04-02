@@ -12,7 +12,7 @@ use std::sync::Mutex;
 // TODO:
 // Z Buffer, Color interpolation
 // DONE:
-// Face culling, Depth sorting, Normals and lighting
+// Normal face culling, Depth sorting, Near and Viewport clipping, lighting
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 600;

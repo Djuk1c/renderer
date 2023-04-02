@@ -95,6 +95,7 @@ fn render_test() {
             outside_points.push(tri.pos[2]);
         }
 
+        // Whole triangle is inside
         if inside_points.len() == 3 {
             result.push(tri.clone());
         } else if inside_points.len() == 1 && outside_points.len() == 2 {
@@ -124,7 +125,7 @@ fn render_test() {
 			new_0.pos[1] = inside_points[1];
 			new_0.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
 
-            // The second triangle is composed of one of he inside points, a
+            // The second triangle is composed of one of the inside points, a
 			// new point determined by the intersection of the other side of the 
 			// triangle and the plane, and the newly created point above
             new_1.pos[0] = inside_points[1];
@@ -162,7 +163,7 @@ fn render_test() {
 
             // Translate the triangle
             let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, 60.0))
-                * Mat4::from_rotation_y(frame as f32 / 300.0);
+                * Mat4::from_rotation_y(frame as f32 / 100.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
             let p3 = mat_model * tri.pos[2].extend(1.0);
@@ -265,17 +266,17 @@ fn render_test() {
                     true,
                 );
                 // Wireframe
-                draw_triangle(
-                    &mut pixels,
-                    clip.pos[0].x as i32,
-                    clip.pos[0].y as i32,
-                    clip.pos[1].x as i32,
-                    clip.pos[1].y as i32,
-                    clip.pos[2].x as i32,
-                    clip.pos[2].y as i32,
-                    GREEN,
-                    false,
-                );
+                //draw_triangle(
+                //    &mut pixels,
+                //    clip.pos[0].x as i32,
+                //    clip.pos[0].y as i32,
+                //    clip.pos[1].x as i32,
+                //    clip.pos[1].y as i32,
+                //    clip.pos[2].x as i32,
+                //    clip.pos[2].y as i32,
+                //    GREEN,
+                //    false,
+                //);
             }
         }
         let duration = start.elapsed();

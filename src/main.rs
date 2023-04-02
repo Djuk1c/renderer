@@ -5,7 +5,7 @@ mod mesh;
 mod models;
 mod test;
 
-use glam::{Mat4, Vec3, Vec4Swizzles, IVec2};
+use glam::{Mat4, Vec3, Vec4Swizzles};
 use std::f32::consts::PI;
 use std::sync::Mutex;
 
@@ -19,8 +19,7 @@ const HEIGHT: usize = 600;
 const RED: u32 = 0xFF2020FF;
 const GREEN: u32 = 0xFF20FF20;
 const WHITE: u32 = 0xFFFFFFFF;
-//const CLEAR_COLOR: u32 = 0xFF101010;
-const CLEAR_COLOR: u32 = 0xFFD4BC72;
+const CLEAR_COLOR: u32 = 0xFF101010;
 
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; WIDTH * HEIGHT]);
 
@@ -36,7 +35,7 @@ fn main() {
 fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
     pixels.fill(CLEAR_COLOR);
 
-    fill_triangle(pixels, IVec2::new(100, 20), IVec2::new(250, 250), IVec2::new(50, 400), RED);
+    //fill_triangle(pixels, IVec2::new(100, 20), IVec2::new(250, 250), IVec2::new(50, 400), RED);
 
     //draw_line(pixels, 50, 50, 300, 400, RED, None);
     //draw_rectangle(pixels, 200, 200, 100, 100, RED, false);

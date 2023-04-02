@@ -1,7 +1,5 @@
 #[cfg(test)]
 use crate::*;
-use glam::IVec2;
-use std::collections::VecDeque;
 
 #[test]
 // Using SDL to present the pixel array on the screen
@@ -12,6 +10,7 @@ fn render_test() {
     use sdl2::keyboard::Keycode;
     use sdl2::pixels::PixelFormatEnum;
     use std::time::Instant;
+    use std::collections::VecDeque;
 
     let mut pixels = PIXELS.lock().unwrap();
     pixels.fill(CLEAR_COLOR);
@@ -41,7 +40,7 @@ fn render_test() {
     // End SDL Init
 
     // Model and proj matrix
-    //let cube = Mesh::cube;
+    //let cube = Mesh::cube();
     let cube = Mesh::from_obj("models/cow.obj");
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
@@ -53,59 +52,86 @@ fn render_test() {
 
     // Clipping functions
     fn distance_point_plane(p: &Vec3, plane: &Vec3, plane_n: &Vec3) -> f32 {
-        //return plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - Vec3::dot(*plane_n, *plane);
-        return Vec3::dot(*plane_n, *p - *plane);
+        return plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - Vec3::dot(*plane_n, *plane);
+        //return Vec3::dot(*plane_n, *p - *plane);
     }
 
-    fn find_split_vertex(point1: Vec3, dot_product1: f32, point2: Vec3, dot_product2: f32) -> Vec3 {
-        let t = dot_product1 / (dot_product1 - dot_product2);
-        let vector = point2 - point1;
-        return point1 + (vector * t);
-    }
+    fn vector_intersect_plane(plane: &Vec3, plane_n: &Vec3, line_start: &Vec3, line_end: &Vec3) -> Vec3
+	{
+		let plane_d = -Vec3::dot(*plane_n, *plane);
+		let ad = Vec3::dot(*line_start, *plane_n);
+		let bd = Vec3::dot(*line_end, *plane_n);
+		let t = (-plane_d - ad) / (bd - ad);
+		let line_start_to_end = *line_end - *line_start;
+		let line_to_intersect = line_start_to_end * t;
+		return *line_start + line_to_intersect;
+	}
 
+    // Thank you @Javidx9
     fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Triangle> {
         let mut result = Vec::<Triangle>::new();
+
+        let mut inside_points = Vec::<Vec3>::new();
+        let mut outside_points = Vec::<Vec3>::new();
 
         let d0 = distance_point_plane(&tri.pos[0], &plane, &plane_n) > 0.0;
         let d1 = distance_point_plane(&tri.pos[1], &plane, &plane_n) > 0.0;
         let d2 = distance_point_plane(&tri.pos[2], &plane, &plane_n) > 0.0;
 
-        if d0 && d1 && d2 {
+        // Checking points
+        if d0 {
+            inside_points.push(tri.pos[0]);
+        } else {
+            outside_points.push(tri.pos[0]);
+        }
+        if d1 {
+            inside_points.push(tri.pos[1]);
+        } else {
+            outside_points.push(tri.pos[1]);
+        }
+        if d2 {
+            inside_points.push(tri.pos[2]);
+        } else {
+            outside_points.push(tri.pos[2]);
+        }
+
+        if inside_points.len() == 3 {
             result.push(tri.clone());
-        } else if d0 || d1 || d2 {
-            let mut inside_points = Vec::<Vec3>::new();
+        } else if inside_points.len() == 1 && outside_points.len() == 2 {
+            // Triangle should be clipped. As two points lie outside
+			// the plane, the triangle simply becomes a smaller triangle
+            let mut new = Triangle::zero();
 
-            // Checking points
-            if d0 {
-                inside_points.push(tri.pos[0]);
-            }
-            if d1 {
-                inside_points.push(tri.pos[1]);
-            }
-            if d2 {
-                inside_points.push(tri.pos[2]);
-            }
+            // The inside point is valid, so keep that...
+            new.pos[0] = inside_points[0];
 
-            // Checking splits
-            if d0 != d1 {
-                inside_points.push(find_split_vertex(tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane), tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane)));
-            }
-            if d1 != d2 {
-                inside_points.push(find_split_vertex(tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane), tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane)));
-            }
-            if d2 != d0 {
-                inside_points.push(find_split_vertex(tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane), tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane)));
-            }
-            
-            // Craft triangles
-            if inside_points.len() == 4 {
-                result.push(Triangle::new_vec(inside_points[0], inside_points[1], inside_points[2]));
-                result.push(Triangle::new_vec(inside_points[0], inside_points[2], inside_points[3]));
-            } else if inside_points.len() == 3 {
-                result.push(Triangle::new_vec(inside_points[0], inside_points[1], inside_points[2]));
-            } else {
-                panic!("Weird amount of clipped triangles");
-            }
+            // but the two new points are at the locations where the 
+			// original sides of the triangle (lines) intersect with the plane
+            new.pos[1] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
+			new.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[1]);
+            result.push(new);
+        } else if inside_points.len() == 2 && outside_points.len() == 1 {
+            // Triangle should be clipped. As two points lie inside the plane,
+			// the clipped triangle becomes a "quad". Fortunately, we can
+			// represent a quad with two new triangles
+            let mut new_0 = Triangle::zero();
+            let mut new_1 = Triangle::zero();
+
+            // The first triangle consists of the two inside points and a new
+			// point determined by the location where one side of the triangle
+			// intersects with the plane
+			new_0.pos[0] = inside_points[0];
+			new_0.pos[1] = inside_points[1];
+			new_0.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
+
+            // The second triangle is composed of one of he inside points, a
+			// new point determined by the intersection of the other side of the 
+			// triangle and the plane, and the newly created point above
+            new_1.pos[0] = inside_points[1];
+			new_1.pos[1] = new_0.pos[2];
+			new_1.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[1], &outside_points[0]);
+            result.push(new_0);
+            result.push(new_1);
         }
 
         return result;
@@ -131,12 +157,12 @@ fn render_test() {
 
         frame += 1;
         for (_i, tri) in cube.triangles.iter().enumerate() {
-            // Translate the triangle
-            //let mat_model = Mat4::from_translation(Vec3::new(3.0, 0.0, 10.0))
-            //    * Mat4::from_rotation_y(frame as f32 / 50.0);
+            //let mat_model = Mat4::from_translation(Vec3::new(0.0, -0.5, 2.5))
+            //    * Mat4::from_rotation_y(frame as f32 / 200.0);
 
-            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, 50.0))
-                * Mat4::from_rotation_y(frame as f32 / 500.0);
+            // Translate the triangle
+            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, 60.0))
+                * Mat4::from_rotation_y(frame as f32 / 300.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
             let p3 = mat_model * tri.pos[2].extend(1.0);
@@ -200,9 +226,7 @@ fn render_test() {
             let mut new_triangles = 1;
 
             for plane in 0 .. 4 {
-                //println!("plane loop");
                 while new_triangles > 0 {
-                    //println!("{}", queue.len());
                     let t = queue.pop_front().unwrap();
                     new_triangles -= 1;
 
@@ -229,13 +253,6 @@ fn render_test() {
 
             // Draw final triangles
             for clip in queue {
-                //fill_triangle(
-                //    &mut pixels,
-                //    IVec2::new(clip.pos[0].x as i32, clip.pos[0].y as i32),
-                //    IVec2::new(clip.pos[1].x as i32, clip.pos[1].y as i32),
-                //    IVec2::new(clip.pos[2].x as i32, clip.pos[2].y as i32),
-                //    tri.1,
-                //);
                 draw_triangle(
                     &mut pixels,
                     clip.pos[0].x as i32,
@@ -244,21 +261,21 @@ fn render_test() {
                     clip.pos[1].y as i32,
                     clip.pos[2].x as i32,
                     clip.pos[2].y as i32,
-                    RED,
+                    tri.1,
                     true,
                 );
                 // Wireframe
-                //draw_triangle(
-                //    &mut pixels,
-                //    clip.pos[0].x as i32,
-                //    clip.pos[0].y as i32,
-                //    clip.pos[1].x as i32,
-                //    clip.pos[1].y as i32,
-                //    clip.pos[2].x as i32,
-                //    clip.pos[2].y as i32,
-                //    GREEN,
-                //    false,
-                //);
+                draw_triangle(
+                    &mut pixels,
+                    clip.pos[0].x as i32,
+                    clip.pos[0].y as i32,
+                    clip.pos[1].x as i32,
+                    clip.pos[1].y as i32,
+                    clip.pos[2].x as i32,
+                    clip.pos[2].y as i32,
+                    GREEN,
+                    false,
+                );
             }
         }
         let duration = start.elapsed();

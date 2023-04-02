@@ -33,6 +33,9 @@ impl Triangle {
             ],
         }
     }
+    pub fn zero() -> Self {
+        Self::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0)
+    }
 }
 
 pub struct Mesh {

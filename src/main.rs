@@ -19,7 +19,8 @@ const HEIGHT: usize = 600;
 const RED: u32 = 0xFF2020FF;
 const GREEN: u32 = 0xFF20FF20;
 const WHITE: u32 = 0xFFFFFFFF;
-const CLEAR_COLOR: u32 = 0xFF101010;
+//const CLEAR_COLOR: u32 = 0xFF101010;
+const CLEAR_COLOR: u32 = 0xFFD4BC72;
 
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; WIDTH * HEIGHT]);
 

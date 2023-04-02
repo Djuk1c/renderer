@@ -1,5 +1,7 @@
 #[cfg(test)]
 use crate::*;
+use glam::IVec2;
+use std::collections::VecDeque;
 
 #[test]
 // Using SDL to present the pixel array on the screen
@@ -51,13 +53,14 @@ fn render_test() {
 
     // Clipping functions
     fn distance_point_plane(p: &Vec3, plane: &Vec3, plane_n: &Vec3) -> f32 {
-        return plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - Vec3::dot(*plane_n, *plane);
+        //return plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - Vec3::dot(*plane_n, *plane);
+        return Vec3::dot(*plane_n, *p - *plane);
     }
 
     fn find_split_vertex(point1: Vec3, dot_product1: f32, point2: Vec3, dot_product2: f32) -> Vec3 {
         let t = dot_product1 / (dot_product1 - dot_product2);
         let vector = point2 - point1;
-        return point1 + vector * t;
+        return point1 + (vector * t);
     }
 
     fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Triangle> {
@@ -85,13 +88,13 @@ fn render_test() {
 
             // Checking splits
             if d0 != d1 {
-                inside_points.push(find_split_vertex(tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane_n), tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane_n)));
+                inside_points.push(find_split_vertex(tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane), tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane)));
             }
             if d1 != d2 {
-                inside_points.push(find_split_vertex(tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane_n), tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane_n)));
+                inside_points.push(find_split_vertex(tri.pos[1], Vec3::dot(*plane_n, tri.pos[1] - *plane), tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane)));
             }
             if d2 != d0 {
-                inside_points.push(find_split_vertex(tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane_n), tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane_n)));
+                inside_points.push(find_split_vertex(tri.pos[2], Vec3::dot(*plane_n, tri.pos[2] - *plane), tri.pos[0], Vec3::dot(*plane_n, tri.pos[0] - *plane)));
             }
             
             // Craft triangles
@@ -100,6 +103,8 @@ fn render_test() {
                 result.push(Triangle::new_vec(inside_points[0], inside_points[2], inside_points[3]));
             } else if inside_points.len() == 3 {
                 result.push(Triangle::new_vec(inside_points[0], inside_points[1], inside_points[2]));
+            } else {
+                panic!("Weird amount of clipped triangles");
             }
         }
 
@@ -130,7 +135,7 @@ fn render_test() {
             //let mat_model = Mat4::from_translation(Vec3::new(3.0, 0.0, 10.0))
             //    * Mat4::from_rotation_y(frame as f32 / 50.0);
 
-            let mat_model = Mat4::from_translation(Vec3::new(30.0, 0.0, 80.0))
+            let mat_model = Mat4::from_translation(Vec3::new(0.0, 0.0, 50.0))
                 * Mat4::from_rotation_y(frame as f32 / 500.0);
             let p1 = mat_model * tri.pos[0].extend(1.0);
             let p2 = mat_model * tri.pos[1].extend(1.0);
@@ -184,16 +189,53 @@ fn render_test() {
             z1.total_cmp(&z2)
         });
         let duration = start.elapsed();
-        println!("Time to do {} triangle calculations: {:?}", to_render.len(), duration);
+        println!("Time to do {} triangle calculations (Before viewport clip): {:?}", to_render.len(), duration);
 
         let start = Instant::now();
         for tri in &to_render {
-            // Viewport clip
-            //let left_clip = clip_triangle(&tri.0, &Vec3::new(WIDTH as f32 - 1.0, 0.0, 0.0), &Vec3::new(-1.0, 0.0, 0.0));
-            let clipped = clip_triangle(&tri.0, &Vec3::new(0.0, 0.0, 0.0), &Vec3::new(1.0, 0.0, 0.0));
 
-            // Draw
-            for clip in clipped {
+            // Viewport clip
+            let mut queue: VecDeque<Triangle> = VecDeque::new();
+            queue.push_back(tri.0.clone());
+            let mut new_triangles = 1;
+
+            for plane in 0 .. 4 {
+                //println!("plane loop");
+                while new_triangles > 0 {
+                    //println!("{}", queue.len());
+                    let t = queue.pop_front().unwrap();
+                    new_triangles -= 1;
+
+                    let clipped = match plane {
+                        0 => {
+                            clip_triangle(&t, &Vec3::new(0.0, 0.0, 0.0), &Vec3::new(0.0, 1.0, 0.0))
+                        }
+                        1 => {
+                            clip_triangle(&t, &Vec3::new(0.0, HEIGHT as f32 - 1.0, 0.0), &Vec3::new(0.0, -1.0, 0.0))
+                        }
+                        2 => {
+                            clip_triangle(&t, &Vec3::new(0.0, 0.0, 0.0), &Vec3::new(1.0, 0.0, 0.0))
+                        }
+                        _ => {
+                            clip_triangle(&t, &Vec3::new(WIDTH as f32 - 1.0, 0.0, 0.0), &Vec3::new(-1.0, 0.0, 0.0))
+                        }
+                    };
+                    for tri in clipped {
+                        queue.push_back(tri);
+                    }
+                }
+                new_triangles = queue.len();
+            }
+
+            // Draw final triangles
+            for clip in queue {
+                //fill_triangle(
+                //    &mut pixels,
+                //    IVec2::new(clip.pos[0].x as i32, clip.pos[0].y as i32),
+                //    IVec2::new(clip.pos[1].x as i32, clip.pos[1].y as i32),
+                //    IVec2::new(clip.pos[2].x as i32, clip.pos[2].y as i32),
+                //    tri.1,
+                //);
                 draw_triangle(
                     &mut pixels,
                     clip.pos[0].x as i32,
@@ -202,7 +244,7 @@ fn render_test() {
                     clip.pos[1].y as i32,
                     clip.pos[2].x as i32,
                     clip.pos[2].y as i32,
-                    tri.1,
+                    RED,
                     true,
                 );
                 // Wireframe

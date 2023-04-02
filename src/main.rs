@@ -5,7 +5,7 @@ mod mesh;
 mod models;
 mod test;
 
-use glam::{Mat4, Vec3, Vec4Swizzles};
+use glam::{Mat4, Vec3, Vec4Swizzles, IVec2};
 use std::f32::consts::PI;
 use std::sync::Mutex;
 
@@ -34,13 +34,16 @@ fn main() {
 #[allow(dead_code)]
 fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
     pixels.fill(CLEAR_COLOR);
-    draw_line(pixels, 50, 50, 300, 400, RED, None);
-    draw_rectangle(pixels, 200, 200, 100, 100, RED, false);
-    draw_rectangle(pixels, 400, 50, 100, 100, RED, true);
-    draw_circle(pixels, 400, 400, 150, RED, false);
-    draw_circle(pixels, 400, 400, 100, RED, true);
-    draw_triangle(pixels, 50, 50, 150, 50, 50, 150, RED, true);
-    draw_triangle(pixels, 52, 152, 152, 152, 152, 52, RED, false);
+
+    fill_triangle(pixels, IVec2::new(100, 20), IVec2::new(250, 250), IVec2::new(50, 400), RED);
+
+    //draw_line(pixels, 50, 50, 300, 400, RED, None);
+    //draw_rectangle(pixels, 200, 200, 100, 100, RED, false);
+    //draw_rectangle(pixels, 400, 50, 100, 100, RED, true);
+    //draw_circle(pixels, 400, 400, 150, RED, false);
+    //draw_circle(pixels, 400, 400, 100, RED, true);
+    //draw_triangle(pixels, 50, 50, 150, 50, 50, 150, RED, true);
+    //draw_triangle(pixels, 52, 152, 152, 152, 152, 52, RED, false);
 }
 
 // WASM

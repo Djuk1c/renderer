@@ -12,7 +12,7 @@ use std::sync::Mutex;
 // TODO:
 // Z Buffer, Color interpolation
 // DONE:
-// Face culling, Depth sorting, Normals and lighting
+// Normal face culling, Depth sorting, Near and Viewport clipping, lighting
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 600;
@@ -24,24 +24,26 @@ const CLEAR_COLOR: u32 = 0xFF101010;
 static PIXELS: Mutex<[u32; WIDTH * HEIGHT]> = Mutex::new([0u32; WIDTH * HEIGHT]);
 
 fn main() {
-    //test_scene(&mut pixels);
+    let mut pixels = PIXELS.lock().unwrap();
+    test_scene(&mut pixels);
 
-    wasm_cube_test(0, 0.16);
-    //save_to_ppm(*PIXELS.lock().unwrap());
-    //let test = Mesh::from_obj("models/teapot.obj");
+    save_to_ppm(*pixels);
     return;
 }
 
 #[allow(dead_code)]
 fn test_scene<const SIZE: usize>(pixels: &mut [u32; SIZE]) {
     pixels.fill(CLEAR_COLOR);
-    draw_line(pixels, 50, 50, 300, 400, RED, None);
-    draw_rectangle(pixels, 200, 200, 100, 100, RED, false);
-    draw_rectangle(pixels, 400, 50, 100, 100, RED, true);
-    draw_circle(pixels, 400, 400, 150, RED, false);
-    draw_circle(pixels, 400, 400, 100, RED, true);
-    draw_triangle(pixels, 50, 50, 150, 50, 50, 150, RED, true);
-    draw_triangle(pixels, 52, 152, 152, 152, 152, 52, RED, false);
+
+    //fill_triangle(pixels, IVec2::new(100, 20), IVec2::new(250, 250), IVec2::new(50, 400), RED);
+
+    //draw_line(pixels, 50, 50, 300, 400, RED, None);
+    //draw_rectangle(pixels, 200, 200, 100, 100, RED, false);
+    //draw_rectangle(pixels, 400, 50, 100, 100, RED, true);
+    //draw_circle(pixels, 400, 400, 150, RED, false);
+    //draw_circle(pixels, 400, 400, 100, RED, true);
+    //draw_triangle(pixels, 50, 50, 150, 50, 50, 150, RED, true);
+    //draw_triangle(pixels, 52, 152, 152, 152, 152, 52, RED, false);
 }
 
 // WASM

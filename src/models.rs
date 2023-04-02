@@ -1,6 +1,5 @@
 // For WASM testing, since can't File::Open
 use crate::*;
-use mesh::*;
 
 impl Mesh {
     pub fn fish() -> Self {

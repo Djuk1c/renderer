@@ -24,7 +24,10 @@ pub fn draw_triangle<const SIZE: usize>(
 
         // Fill the triangle
         for (y, (min_x, max_x)) in raster_data {
-            draw_line(pixels, min_x, y, max_x, y, color, None);
+            for x in min_x .. max_x {
+                pixels[(x + y * WIDTH as i32) as usize] = color;
+            }
+            //draw_line(pixels, min_x, y, max_x, y, color, None);
         }
     } else {
         draw_line(pixels, x1, y1, x2, y2, color, None);
@@ -52,7 +55,8 @@ pub fn draw_line<const SIZE: usize>(
     let mut current_y: i32 = y1;
 
     loop {
-        if (current_x + current_y * WIDTH as i32) as usize >= WIDTH * HEIGHT {
+        if current_x >= WIDTH as i32 || current_y >= HEIGHT as i32 || current_y < 0 || current_x < 0
+        {
             return;
         }
         pixels[(current_x + current_y * WIDTH as i32) as usize] = color;

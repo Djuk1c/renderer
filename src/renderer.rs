@@ -108,7 +108,7 @@ impl Renderer {
         canvas.clear(0xFF020202);
         self.depth_sort();
         for tri in self.to_render.iter() {
-            draw_triangle(canvas, tri.pos[0].xy().as_ivec2(), tri.pos[1].xy().as_ivec2(), tri.pos[2].xy().as_ivec2(), tri.color, true);
+            draw_triangle(canvas, tri.pos[0].xy().as_ivec2(), tri.pos[1].xy().as_ivec2(), tri.pos[2].xy().as_ivec2(), 0xFF0000FF, 0xFF000088, 0xFF000000, true);
         }
         println!("Rendered {} triangles.", self.to_render.len());
         self.to_render.clear();

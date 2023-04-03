@@ -18,6 +18,9 @@ impl Canvas {
     pub fn put_pixel(&mut self, x: i32, y: i32, color: u32) {
         self.pixels[(x + y * WIDTH as i32) as usize] = color;
     }
+    pub fn get_pixel(&self, x: i32, y: i32) -> u32 {
+        return self.pixels[(x + y * WIDTH as i32) as usize];
+    }
     pub fn viewport_to_canvas(pos: &mut Vec3) {
         pos.x += 1.0;
         pos.y += 1.0;

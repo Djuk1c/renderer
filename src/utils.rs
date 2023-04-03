@@ -25,8 +25,7 @@ pub fn save_to_ppm<const SIZE: usize>(pixels: [u32; SIZE]) {
 pub fn default_mat_proj() -> Mat4 {
     let fov = 90.0;
     let fov_rad = (1.0 / (fov * 0.5 / 180.0 * PI).tan()) as f32;
-    //let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
-    let aspect_ratio = 1.0;
+    let aspect_ratio = WIDTH as f32 / HEIGHT as f32;
     let near = 0.1;
     let far = 1000.0;
     return Mat4::perspective_rh(fov_rad, aspect_ratio, near, far);

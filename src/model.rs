@@ -20,4 +20,15 @@ impl Model {
     pub fn get_model_mat(&self) -> Mat4 {
         return Mat4::from_scale_rotation_translation(self.scale, self.rotation, self.translation);
     }
+
+    // Debug
+    #[allow(dead_code)]
+    pub fn cube() -> Self {
+        Self {
+            mesh: Mesh::cube(),
+            translation: Vec3::ZERO,
+            scale: Vec3::splat(1.0),
+            rotation: Quat::IDENTITY,
+        }
+    }
 }

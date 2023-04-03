@@ -48,13 +48,16 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut cow = Model::new("models/cow.obj");
-    let mut goat = Model::new("models/goat.obj");
+    //let mut cow = Model::new("models/cow.obj");
+    //let mut goat = Model::new("models/goat.obj");
+    let mut cube = Model::cube();
 
-    cow.translation = Vec3::new(-18.0, 0.0, 80.0);
-    cow.scale = Vec3::new(0.5, 0.5, 0.5);
-    goat.translation = Vec3::new(18.0, 0.0, 50.0);
-    goat.scale = Vec3::new(0.8, 0.8, 0.8);
+    //cow.translation = Vec3::new(-18.0, 0.0, 80.0);
+    //cow.scale = Vec3::new(0.5, 0.5, 0.5);
+    //goat.translation = Vec3::new(18.0, 0.0, 50.0);
+    //goat.scale = Vec3::new(0.8, 0.8, 0.8);
+    cube.translation.z += 5.0;
+    cube.translation.y -= 0.5;
 
     // SDL Draw
     let running = true;
@@ -74,12 +77,14 @@ fn main() {
         // -------------------------------- //
         frame += 1;
         let foo = (frame as f32 / 20.0).sin();
-        goat.translation.z += foo;
-        cow.translation.z -= foo;
-        cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, 1.0), (frame as f32).to_radians());
-        goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
-        renderer.process_model(&cow);
-        renderer.process_model(&goat);
+        //goat.translation.z += foo;
+        //cow.translation.z -= foo;
+        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, 1.0), (frame as f32).to_radians());
+        //goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
+        cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
+        //renderer.process_model(&cow);
+        //renderer.process_model(&goat);
+        renderer.process_model(&cube);
         renderer.draw(&mut canvas);
         // -------------------------------- //
 

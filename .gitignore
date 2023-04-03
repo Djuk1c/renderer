@@ -1,3 +1,4 @@
 /target
 /wasm/drawing.wasm
 output.jpg
+/src/.old

@@ -6,8 +6,9 @@ if [ "$1" == "wasm" ]; then
 #elif [ "$1" == "r" ]; then
 #	cargo test --release -- --nocapture
 elif [ "$1" == "n" ]; then
-	cargo run && convert output.ppm output.jpg && display output.jpg
-	rm output.ppm
+	#cargo run && convert output.ppm output.jpg && display output.jpg
+	#rm output.ppm
+    echo hi
 else
-	cargo test --release -- --nocapture
+	cargo run --release
 fi

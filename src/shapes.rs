@@ -1,14 +1,13 @@
-use crate::{HEIGHT, WIDTH};
-use std::{collections::hash_map::Entry, collections::HashMap, fs::File, io::Write};
+use glam::IVec2;
 
-pub fn draw_triangle<const SIZE: usize>(
-    pixels: &mut [u32; SIZE],
-    x1: i32,
-    y1: i32,
-    x2: i32,
-    y2: i32,
-    x3: i32,
-    y3: i32,
+use crate::canvas::{Canvas, WIDTH, HEIGHT};
+use std::{collections::hash_map::Entry, collections::HashMap};
+
+pub fn draw_triangle(
+    canvas: &mut Canvas,
+    p1: IVec2,
+    p2: IVec2,
+    p3: IVec2,
     color: u32,
     fill: bool,
 ) {
@@ -18,48 +17,46 @@ pub fn draw_triangle<const SIZE: usize>(
     // Store the lowest and highest X for each Y
     // Draw horizontal lines from that data
     if fill {
-        draw_line(pixels, x1, y1, x2, y2, color, Some(&mut raster_data));
-        draw_line(pixels, x1, y1, x3, y3, color, Some(&mut raster_data));
-        draw_line(pixels, x3, y3, x2, y2, color, Some(&mut raster_data));
+        draw_line(canvas, p1, p2, color, Some(&mut raster_data));
+        draw_line(canvas, p1, p3, color, Some(&mut raster_data));
+        draw_line(canvas, p3, p2, color, Some(&mut raster_data));
 
         // Fill the triangle
         for (y, (min_x, max_x)) in raster_data {
             for x in min_x .. max_x {
-                pixels[(x + y * WIDTH as i32) as usize] = color;
+                canvas.put_pixel(x, y, color);
             }
             //draw_line(pixels, min_x, y, max_x, y, color, None);
         }
     } else {
-        draw_line(pixels, x1, y1, x2, y2, color, None);
-        draw_line(pixels, x1, y1, x3, y3, color, None);
-        draw_line(pixels, x3, y3, x2, y2, color, None);
+        draw_line(canvas, p1, p2, color, None);
+        draw_line(canvas, p1, p3, color, None);
+        draw_line(canvas, p3, p2, color, None);
     }
 }
 
-pub fn draw_line<const SIZE: usize>(
-    pixels: &mut [u32; SIZE],
-    x1: i32,
-    y1: i32,
-    x2: i32,
-    y2: i32,
+pub fn draw_line(
+    canvas: &mut Canvas,
+    p1: IVec2,
+    p2: IVec2,
     color: u32,
     mut raster_data: Option<&mut HashMap<i32, (i32, i32)>>,
 ) {
-    let dx: i32 = i32::abs(x2 - x1);
-    let dy: i32 = i32::abs(y2 - y1);
-    let sx: i32 = if x1 < x2 { 1 } else { -1 };
-    let sy: i32 = if y1 < y2 { 1 } else { -1 };
+    let dx: i32 = i32::abs(p2.x - p1.x);
+    let dy: i32 = i32::abs(p2.y - p1.y);
+    let sx: i32 = if p1.x < p2.x { 1 } else { -1 };
+    let sy: i32 = if p1.y < p2.y { 1 } else { -1 };
 
     let mut error: i32 = (if dx > dy { dx } else { -dy }) / 2;
-    let mut current_x: i32 = x1;
-    let mut current_y: i32 = y1;
+    let mut current_x: i32 = p1.x;
+    let mut current_y: i32 = p1.y;
 
     loop {
         if current_x >= WIDTH as i32 || current_y >= HEIGHT as i32 || current_y < 0 || current_x < 0
         {
             return;
         }
-        pixels[(current_x + current_y * WIDTH as i32) as usize] = color;
+        canvas.put_pixel(current_x, current_y, color);
 
         // Scanline
         // Store min_x and max_y for each Y, so i can later draw hor lines and fill the triangle
@@ -77,7 +74,7 @@ pub fn draw_line<const SIZE: usize>(
             };
         }
 
-        if current_x == x2 && current_y == y2 {
+        if current_x == p2.x && current_y == p2.y {
             return;
         }
         let error2: i32 = error;
@@ -93,8 +90,10 @@ pub fn draw_line<const SIZE: usize>(
     }
 }
 
+#[allow(dead_code)]
+// TODO: Use IVec2
 pub fn draw_circle<const SIZE: usize>(
-    pixels: &mut [u32; SIZE],
+    canvas: &mut Canvas,
     x: i32,
     y: i32,
     r: i32,
@@ -111,11 +110,11 @@ pub fn draw_circle<const SIZE: usize>(
                         // TODO: Rewrite this with brain
                         let val = (dx * dx + dy * dy) - (r * r);
                         if val > 0 && val <= r * 2 {
-                            pixels[(rx + ry * WIDTH as i32) as usize] = color;
+                            canvas.put_pixel(rx, ry, color);
                         }
                     } else {
                         if dx * dx + dy * dy <= r * r {
-                            pixels[(rx + ry * WIDTH as i32) as usize] = color;
+                            canvas.put_pixel(rx, ry, color);
                         }
                     }
                 }
@@ -124,8 +123,10 @@ pub fn draw_circle<const SIZE: usize>(
     }
 }
 
+#[allow(dead_code)]
+// TODO: Use IVec2
 pub fn draw_rectangle<const SIZE: usize>(
-    pixels: &mut [u32; SIZE],
+    canvas: &mut Canvas,
     x: i32,
     y: i32,
     w: i32,
@@ -140,30 +141,13 @@ pub fn draw_rectangle<const SIZE: usize>(
                     if !fill {
                         // TODO: Lots of wasted iterations, perhaps a faster algorithm exists
                         if ry == y || ry == y + h - 1 || rx == x || rx == x + h - 1 {
-                            pixels[(rx + ry * WIDTH as i32) as usize] = color;
+                            canvas.put_pixel(rx, ry, color);
                         }
                     } else {
-                        pixels[(rx + ry * WIDTH as i32) as usize] = color;
+                        canvas.put_pixel(rx, ry, color);
                     }
                 }
             }
-        }
-    }
-}
-
-pub fn save_to_ppm<const SIZE: usize>(pixels: [u32; SIZE]) {
-    let mut file = File::create("output.ppm").unwrap();
-    file.write(format!("P6\n{} {} 255\n", WIDTH, HEIGHT).as_bytes())
-        .unwrap();
-    for y in 0..HEIGHT {
-        for x in 0..WIDTH {
-            let pixel = pixels[x + y * WIDTH];
-            let bytes: [u8; 3] = [
-                ((pixel >> (8 * 0)) & 0xFF) as u8,
-                ((pixel >> (8 * 1)) & 0xFF) as u8,
-                ((pixel >> (8 * 2)) & 0xFF) as u8,
-            ];
-            file.write_all(&bytes).unwrap();
         }
     }
 }

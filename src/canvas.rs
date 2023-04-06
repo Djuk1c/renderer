@@ -10,13 +10,16 @@ pub struct Canvas {
 }
 impl Canvas {
     pub fn new() -> Self {
-        Self { pixels: [0u32; 800 * 600] }
+        Self { pixels: [0u32; WIDTH * HEIGHT] }
     }
     pub fn clear(&mut self, color: u32) {
         self.pixels.fill(color);
     }
     pub fn put_pixel(&mut self, x: i32, y: i32, color: u32) {
         self.pixels[(x + y * WIDTH as i32) as usize] = color;
+    }
+    pub fn get_pixel(&self, x: i32, y: i32) -> u32 {
+        return self.pixels[(x + y * WIDTH as i32) as usize];
     }
     pub fn viewport_to_canvas(pos: &mut Vec3) {
         pos.x += 1.0;

@@ -1,6 +1,7 @@
-use glam::IVec2;
+use glam::{IVec2, Vec2};
 
 use crate::canvas::{Canvas, WIDTH, HEIGHT};
+use crate::utils::{scale_color, add_colors};
 use std::{collections::hash_map::Entry, collections::HashMap};
 
 pub fn draw_triangle(
@@ -8,7 +9,9 @@ pub fn draw_triangle(
     p1: IVec2,
     p2: IVec2,
     p3: IVec2,
-    color: u32,
+    color1: u32,
+    color2: u32,
+    color3: u32,
     fill: bool,
 ) {
     let mut raster_data: HashMap<i32, (i32, i32)> = HashMap::new();
@@ -17,21 +20,20 @@ pub fn draw_triangle(
     // Store the lowest and highest X for each Y
     // Draw horizontal lines from that data
     if fill {
-        draw_line(canvas, p1, p2, color, Some(&mut raster_data));
-        draw_line(canvas, p1, p3, color, Some(&mut raster_data));
-        draw_line(canvas, p3, p2, color, Some(&mut raster_data));
+        draw_line(canvas, p1, p2, color1, color2, Some(&mut raster_data));
+        draw_line(canvas, p1, p3, color1, color3, Some(&mut raster_data));
+        draw_line(canvas, p3, p2, color3, color2, Some(&mut raster_data));
 
         // Fill the triangle
         for (y, (min_x, max_x)) in raster_data {
-            for x in min_x .. max_x {
-                canvas.put_pixel(x, y, color);
-            }
-            //draw_line(pixels, min_x, y, max_x, y, color, None);
+            let c1 = canvas.get_pixel(min_x, y);
+            let c2 = canvas.get_pixel(max_x, y);
+            draw_line(canvas, IVec2::new(min_x, y), IVec2::new(max_x, y), c1, c2, None);
         }
     } else {
-        draw_line(canvas, p1, p2, color, None);
-        draw_line(canvas, p1, p3, color, None);
-        draw_line(canvas, p3, p2, color, None);
+        draw_line(canvas, p1, p2, color1, color2, None);
+        draw_line(canvas, p1, p3, color1, color3, None);
+        draw_line(canvas, p3, p2, color3, color2, None);
     }
 }
 
@@ -39,7 +41,8 @@ pub fn draw_line(
     canvas: &mut Canvas,
     p1: IVec2,
     p2: IVec2,
-    color: u32,
+    color1: u32,
+    color2: u32,
     mut raster_data: Option<&mut HashMap<i32, (i32, i32)>>,
 ) {
     let dx: i32 = i32::abs(p2.x - p1.x);
@@ -51,12 +54,10 @@ pub fn draw_line(
     let mut current_x: i32 = p1.x;
     let mut current_y: i32 = p1.y;
 
+    let mut points: Vec::<IVec2> = vec![];
+
     loop {
-        if current_x >= WIDTH as i32 || current_y >= HEIGHT as i32 || current_y < 0 || current_x < 0
-        {
-            return;
-        }
-        canvas.put_pixel(current_x, current_y, color);
+        points.push(IVec2::new(current_x, current_y));
 
         // Scanline
         // Store min_x and max_y for each Y, so i can later draw hor lines and fill the triangle
@@ -75,6 +76,17 @@ pub fn draw_line(
         }
 
         if current_x == p2.x && current_y == p2.y {
+            for (i, point) in points.iter().enumerate() {
+                let n = points.len() as u32;
+                let i = i as u32;
+                let ni = n - i;
+                let d1 = ni as f32 / n as f32;
+                let d2 = i as f32 / n as f32;
+                let c1 = scale_color(color1, d1);
+                let c2 = scale_color(color2, d2);
+                let color = add_colors(c1, c2);
+                canvas.put_pixel(point.x, point.y, color);
+            }
             return;
         }
         let error2: i32 = error;

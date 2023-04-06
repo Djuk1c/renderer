@@ -1,4 +1,6 @@
-use glam::{Vec3, Quat};
+use std::time::{Duration, Instant};
+use glam::{Vec3, Quat, IVec2};
+use mesh::Vertex;
 use model::Model;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -6,6 +8,7 @@ use sdl2::pixels::PixelFormatEnum;
 
 use canvas::{Canvas, HEIGHT, WIDTH};
 use renderer::Renderer;
+use shapes::{draw_line, draw_triangle};
 use utils::default_mat_proj;
 
 mod shapes;
@@ -17,9 +20,10 @@ mod renderer;
 mod clipping;
 
 // TODO:
-// Z Buffer, Color interpolation
+// Z Buffer
 // DONE:
-// Normal face culling, Depth sorting, Near and Viewport clipping, lighting
+// Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
+// smooth shading
 
 fn main() {
     // SDL Init
@@ -48,16 +52,17 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    //let mut cow = Model::new("models/cow.obj");
+    let mut cow = Model::new("models/cow.obj");
     //let mut goat = Model::new("models/goat.obj");
-    let mut cube = Model::cube();
+    //let mut cube = Model::cube();
 
-    //cow.translation = Vec3::new(-18.0, 0.0, 80.0);
-    //cow.scale = Vec3::new(0.5, 0.5, 0.5);
+    cow.translation.z = 40.0;
+    cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (35 as f32).to_radians());
+    cow.scale = Vec3::new(0.5, 0.5, 0.5);
     //goat.translation = Vec3::new(18.0, 0.0, 50.0);
     //goat.scale = Vec3::new(0.8, 0.8, 0.8);
-    cube.translation.z += 5.0;
-    cube.translation.y -= 0.5;
+    //cube.translation.z = 5.0;
+    //cube.translation.y = 0.5;
 
     // SDL Draw
     let running = true;
@@ -79,13 +84,20 @@ fn main() {
         let foo = (frame as f32 / 20.0).sin();
         //goat.translation.z += foo;
         //cow.translation.z -= foo;
-        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, 1.0), (frame as f32).to_radians());
+        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         //goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
-        cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
-        //renderer.process_model(&cow);
+        //cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
+        let start = Instant::now();
+        renderer.process_model(&cow);
         //renderer.process_model(&goat);
-        renderer.process_model(&cube);
+        //renderer.process_model(&cube);
         renderer.draw(&mut canvas);
+        let duration = start.elapsed();
+        println!("Frametime: {:?}", duration);
+
+        //draw_line(&mut canvas, IVec2::new(400, 400), IVec2::new(431, 582), 0xFF0000FF, None);
+        //draw_triangle(&mut canvas, IVec2::new(20, 20), IVec2::new(400, 400), IVec2::new(20, 350), 0xFFFF0000, 0xFF00FF00, 0xFF0000FF, true);
+
         // -------------------------------- //
 
         // Draw on SDL 

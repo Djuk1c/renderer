@@ -2,27 +2,31 @@ use glam::Vec3;
 use std::fs::File;
 use std::io::{self, BufRead};
 
+#[derive(Clone)]
+#[derive(Default)]
 pub struct Vertex {
     pub pos: Vec3,
-    pub normal: [Vec3; 3],
+    pub normal: Vec3,
     pub color: u32,
+}
+impl Vertex {
+    pub fn new(pos: Vec3, normal: Vec3, color: u32) -> Self {
+        Self { pos, normal, color }
+    }
 }
 
 #[derive(Clone)]
 pub struct Triangle {
-    pub pos: [Vec3; 3],
-    pub color: u32,
+    pub v: [Vertex; 3],
 }
 impl Triangle {
     pub fn new(
-        p1: Vec3,
-        p2: Vec3,
-        p3: Vec3,
-        c: u32,
+        p1: Vertex,
+        p2: Vertex,
+        p3: Vertex,
     ) -> Self {
         Self {
-            pos: [ p1, p2, p3 ],
-            color: c,
+            v: [p1, p2, p3]
         }
     }
 }
@@ -36,35 +40,64 @@ impl Mesh {
             triangles: Vec::new(),
         }
     }
+    // TODO: Rewrite this
     pub fn from_obj(path: &str) -> Self {
         let mut model = Self::new();
-        let mut cache: Vec<Vec3> = Vec::new();
+        let mut pos = Vec::<Vec3>::new();
+        let mut norm = Vec::<Vec3>::new();
 
         let file = File::open(path).unwrap();
         let iter = io::BufReader::new(file).lines();
         for line in iter {
             let line = line.unwrap();
-            if line.chars().nth(0).unwrap() == 'v' {
+
+            if line.chars().nth(0).unwrap() == 'v' &&
+                line.chars().nth(1).unwrap() == 'n' {
+                // Vertex normals
+                let normal = line
+                    .split(" ")
+                    .filter_map(|s| s.parse::<f32>().ok())
+                    .collect::<Vec<_>>();
+                norm.push(Vec3 {
+                    x: normal[0],
+                    y: normal[1],
+                    z: normal[2],
+                });
+            } else if line.chars().nth(0).unwrap() == 'v' {
+                // Vertex pos
                 let vertex = line
                     .split(" ")
                     .filter_map(|s| s.parse::<f32>().ok())
                     .collect::<Vec<_>>();
-                cache.push(Vec3 {
+                pos.push(Vec3 {
                     x: vertex[0],
                     y: vertex[1],
                     z: vertex[2],
                 });
             } else if line.chars().nth(0).unwrap() == 'f' {
+                // FaceIndex//NormalIndex
                 let f = line
-                    .split(" ")
+                    .split([' ', '/'].as_ref())
                     .filter_map(|s| s.parse::<u32>().ok())
                     .collect::<Vec<_>>();
+                println!("{:?}", f);
 
                 model.triangles.push(Triangle::new(
-                    cache[(f[0] - 1) as usize],
-                    cache[(f[1] - 1) as usize],
-                    cache[(f[2] - 1) as usize],
-                    0,
+                    Vertex {
+                        pos: (pos[(f[0] - 1) as usize]),
+                        normal: (norm[(f[1] - 1) as usize]),
+                        color: (0xFF000000) 
+                    },
+                    Vertex {
+                        pos: (pos[(f[2] - 1) as usize]),
+                        normal: (norm[(f[3] - 1) as usize]),
+                        color: (0xFF000000) 
+                    },
+                    Vertex {
+                        pos: (pos[(f[4] - 1) as usize]),
+                        normal: (norm[(f[5] - 1) as usize]),
+                        color: (0xFF000000) 
+                    },
                 ));
             }
         }
@@ -72,39 +105,39 @@ impl Mesh {
     }
 
     // Debug
-    #[allow(dead_code)]
-    pub fn cube() -> Self {
-        let mut cube = Self::new();
-        // South
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 0.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-        // East
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 0.0, 1.0), 0));
-        // North
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 1.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 0.0, 1.0), 0));
-        // West
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 0.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0));
-        // Top
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 1.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 0.0), 0));
-        // Bottom
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), 0));
-        cube.triangles
-            .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-        return cube;
-    }
+    //#[allow(dead_code)]
+    //pub fn cube() -> Self {
+    //    let mut cube = Self::new();
+    //    // South
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 0.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
+    //    // East
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 0.0, 1.0), 0));
+    //    // North
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 1.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 0.0, 1.0), 0));
+    //    // West
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 0.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0));
+    //    // Top
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 1.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 0.0), 0));
+    //    // Bottom
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), 0));
+    //    cube.triangles
+    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
+    //    return cube;
+    //}
 }

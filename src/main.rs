@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 use glam::{Vec3, Quat, IVec2};
+use mesh::Vertex;
 use model::Model;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -19,9 +20,10 @@ mod renderer;
 mod clipping;
 
 // TODO:
-// Z Buffer, Color interpolation
+// Z Buffer
 // DONE:
-// Normal face culling, Depth sorting, Near and Viewport clipping, lighting
+// Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
+// smooth shading
 
 fn main() {
     // SDL Init
@@ -54,7 +56,8 @@ fn main() {
     //let mut goat = Model::new("models/goat.obj");
     //let mut cube = Model::cube();
 
-    cow.translation.z = 50.0;
+    cow.translation.z = 40.0;
+    cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (35 as f32).to_radians());
     cow.scale = Vec3::new(0.5, 0.5, 0.5);
     //goat.translation = Vec3::new(18.0, 0.0, 50.0);
     //goat.scale = Vec3::new(0.8, 0.8, 0.8);
@@ -81,7 +84,7 @@ fn main() {
         let foo = (frame as f32 / 20.0).sin();
         //goat.translation.z += foo;
         //cow.translation.z -= foo;
-        cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
+        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         //goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
         //cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
         let start = Instant::now();

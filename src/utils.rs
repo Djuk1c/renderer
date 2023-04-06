@@ -40,7 +40,7 @@ pub fn scale_color(color: u32, scale: f32) -> u32 {
     g = (g as f32 * scale) as u8;
     r = (r as f32 * scale) as u8;
 
-    let val = u32::from_be_bytes([0xFF, b, g, r]);
+    let val = u32::from_be_bytes([0xFF, r, g, b]);
     return val;
 }
 

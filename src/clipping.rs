@@ -25,25 +25,25 @@ pub fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Tria
     let mut inside_points = Vec::<Vec3>::new();
     let mut outside_points = Vec::<Vec3>::new();
 
-    let d0 = distance_point_plane(&tri.pos[0], &plane, &plane_n) > 0.0;
-    let d1 = distance_point_plane(&tri.pos[1], &plane, &plane_n) > 0.0;
-    let d2 = distance_point_plane(&tri.pos[2], &plane, &plane_n) > 0.0;
+    let d0 = distance_point_plane(&tri.v[0].pos, &plane, &plane_n) > 0.0;
+    let d1 = distance_point_plane(&tri.v[1].pos, &plane, &plane_n) > 0.0;
+    let d2 = distance_point_plane(&tri.v[2].pos, &plane, &plane_n) > 0.0;
 
     // Checking points
     if d0 {
-        inside_points.push(tri.pos[0]);
+        inside_points.push(tri.v[0].pos);
     } else {
-        outside_points.push(tri.pos[0]);
+        outside_points.push(tri.v[0].pos);
     }
     if d1 {
-        inside_points.push(tri.pos[1]);
+        inside_points.push(tri.v[1].pos);
     } else {
-        outside_points.push(tri.pos[1]);
+        outside_points.push(tri.v[1].pos);
     }
     if d2 {
-        inside_points.push(tri.pos[2]);
+        inside_points.push(tri.v[2].pos);
     } else {
-        outside_points.push(tri.pos[2]);
+        outside_points.push(tri.v[2].pos);
     }
 
     // Whole triangle is inside
@@ -55,12 +55,12 @@ pub fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Tria
         let mut new = tri.clone();
 
         // The inside point is valid, so keep that...
-        new.pos[0] = inside_points[0];
+        new.v[0].pos = inside_points[0];
 
         // but the two new points are at the locations where the 
         // original sides of the triangle (lines) intersect with the plane
-        new.pos[1] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
-        new.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[1]);
+        new.v[1].pos = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
+        new.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[1]);
         result.push(new);
     } else if inside_points.len() == 2 && outside_points.len() == 1 {
         // Triangle should be clipped. As two points lie inside the plane,
@@ -72,16 +72,16 @@ pub fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Tria
         // The first triangle consists of the two inside points and a new
         // point determined by the location where one side of the triangle
         // intersects with the plane
-        new_0.pos[0] = inside_points[0];
-        new_0.pos[1] = inside_points[1];
-        new_0.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
+        new_0.v[0].pos = inside_points[0];
+        new_0.v[1].pos = inside_points[1];
+        new_0.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[0], &outside_points[0]);
 
         // The second triangle is composed of one of the inside points, a
         // new point determined by the intersection of the other side of the 
         // triangle and the plane, and the newly created point above
-        new_1.pos[0] = inside_points[1];
-        new_1.pos[1] = new_0.pos[2];
-        new_1.pos[2] = vector_intersect_plane(plane, plane_n, &inside_points[1], &outside_points[0]);
+        new_1.v[0].pos = inside_points[1];
+        new_1.v[1].pos = new_0.v[2].pos;
+        new_1.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[1], &outside_points[0]);
         result.push(new_0);
         result.push(new_1);
     }

@@ -1,6 +1,7 @@
 use glam::{IVec2, Vec2};
 
 use crate::canvas::{Canvas, WIDTH, HEIGHT};
+use crate::utils::{scale_color, add_colors};
 use std::{collections::hash_map::Entry, collections::HashMap};
 
 pub fn draw_triangle(
@@ -27,7 +28,6 @@ pub fn draw_triangle(
         for (y, (min_x, max_x)) in raster_data {
             let c1 = canvas.get_pixel(min_x, y);
             let c2 = canvas.get_pixel(max_x, y);
-            //canvas.put_pixel(x, y, color);
             draw_line(canvas, IVec2::new(min_x, y), IVec2::new(max_x, y), c1, c2, None);
         }
     } else {
@@ -73,38 +73,6 @@ pub fn draw_line(
                 }
                 Entry::Vacant(v) => v.insert((current_x, current_x)),
             };
-        }
-
-        fn scale_color(color: u32, scale: f32) -> u32 {
-            let mut b = ((color >> (8 * 0)) & 0xFF) as u8;
-            let mut g = ((color >> (8 * 1)) & 0xFF) as u8;
-            let mut r = ((color >> (8 * 2)) & 0xFF) as u8;
-
-            b = (b as f32 * scale) as u8;
-            g = (g as f32 * scale) as u8;
-            r = (r as f32 * scale) as u8;
-
-            let val = u32::from_be_bytes([0xFF, b, g, r]);
-            return val;
-        }
-
-        fn add_colors(color1: u32, color2: u32) -> u32 {
-            let b1 = ((color1 >> (8 * 0)) & 0xFF) as u8;
-            let g1 = ((color1 >> (8 * 1)) & 0xFF) as u8;
-            let r1 = ((color1 >> (8 * 2)) & 0xFF) as u8;
-
-            let b2 = ((color2 >> (8 * 0)) & 0xFF) as u8;
-            let g2 = ((color2 >> (8 * 1)) & 0xFF) as u8;
-            let r2 = ((color2 >> (8 * 2)) & 0xFF) as u8;
-
-            let val = u32::from_be_bytes([
-                0xFF,
-                (b1 + b2).clamp(0, 255),
-                (g1 + g2).clamp(0, 255),
-                (r1 + r2).clamp(0, 255),
-            ]);
-
-            return val;
         }
 
         if current_x == p2.x && current_y == p2.y {

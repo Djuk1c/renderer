@@ -10,7 +10,7 @@ pub struct Canvas {
 }
 impl Canvas {
     pub fn new() -> Self {
-        Self { pixels: [0u32; 800 * 600] }
+        Self { pixels: [0u32; WIDTH * HEIGHT] }
     }
     pub fn clear(&mut self, color: u32) {
         self.pixels.fill(color);

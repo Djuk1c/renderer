@@ -2,6 +2,9 @@ use glam::Vec3;
 use std::fs::File;
 use std::io::{self, BufRead};
 
+const COLOR: u32 = 0xFF2020FF;
+//const COLOR: u32 = 0xFFB0B0B0;
+
 #[derive(Clone)]
 #[derive(Default)]
 pub struct Vertex {
@@ -80,23 +83,22 @@ impl Mesh {
                     .split([' ', '/'].as_ref())
                     .filter_map(|s| s.parse::<u32>().ok())
                     .collect::<Vec<_>>();
-                println!("{:?}", f);
 
                 model.triangles.push(Triangle::new(
                     Vertex {
                         pos: (pos[(f[0] - 1) as usize]),
                         normal: (norm[(f[1] - 1) as usize]),
-                        color: (0xFF000000) 
+                        color: (COLOR) 
                     },
                     Vertex {
                         pos: (pos[(f[2] - 1) as usize]),
                         normal: (norm[(f[3] - 1) as usize]),
-                        color: (0xFF000000) 
+                        color: (COLOR)
                     },
                     Vertex {
                         pos: (pos[(f[4] - 1) as usize]),
                         normal: (norm[(f[5] - 1) as usize]),
-                        color: (0xFF000000) 
+                        color: (COLOR) 
                     },
                 ));
             }

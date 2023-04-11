@@ -1,7 +1,7 @@
 use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles};
 use std::collections::VecDeque;
 
-use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::scale_color};
+use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::scale_color, camera::Camera};
 
 pub struct Renderer {
     to_render: Vec<Triangle>,
@@ -14,15 +14,21 @@ impl Renderer {
             mat_proj: proj,
         }
     }
-    pub fn process_model(&mut self, model: &Model) {
-        let mut to_clip: Vec<Triangle> = vec![];
+    pub fn process_model(&mut self, model: &Model, camera: &Camera) {
+        let mut to_clip = Vec::<Triangle>::with_capacity(self.to_render.len());
+        let mat_model = model.get_model_mat();
 
         for tri in model.mesh.triangles.iter() {
-            let mat_model = model.get_model_mat();
+            // Model transform
+            let mut p1 = mat_model * tri.v[0].pos.extend(1.0);
+            let mut p2 = mat_model * tri.v[1].pos.extend(1.0);
+            let mut p3 = mat_model * tri.v[2].pos.extend(1.0);
 
-            let p1 = mat_model * tri.v[0].pos.extend(1.0);
-            let p2 = mat_model * tri.v[1].pos.extend(1.0);
-            let p3 = mat_model * tri.v[2].pos.extend(1.0);
+            // View transform
+            let mat_view = camera.get_view_mat();
+            p1 = mat_view * p1;
+            p2 = mat_view * p2;
+            p3 = mat_view * p3;
 
             // Calculate plane normal for clipping
             let line1 = p2 - p1;
@@ -30,15 +36,9 @@ impl Renderer {
             let normal = Vec3::cross(line1.xyz(), line2.xyz()).normalize();
 
             // Skip if side is invisible (Culling)
-            let vcamera = Vec3::new(0.0, 0.0, 0.0);
-            if Vec3::dot(normal, p1.xyz() - vcamera) >= 0.0 {
+            if Vec3::dot(normal, p1.xyz()) >= 0.0 {
                 continue;
             }
-
-            // Flat shading
-            //let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
-            //let lit = Vec3::dot(normal, dir_light).abs();
-            //let c = (RED & !0xFF) | (255.0 * lit) as u32;
 
             // Clipping near plane
             let mut tri_to_clip = tri.clone();
@@ -53,9 +53,10 @@ impl Renderer {
                 tri_c.v[1].pos = self.mat_proj.project_point3(tri_c.v[1].pos);
                 tri_c.v[2].pos = self.mat_proj.project_point3(tri_c.v[2].pos);
 
-                //tri_c.v[0].normal = (self.mat_proj * tri_c.v[0].normal.extend(1.0)).xyz();
-                //tri_c.v[1].normal = (self.mat_proj * tri_c.v[1].normal.extend(1.0)).xyz();
-                //tri_c.v[2].normal = (self.mat_proj * tri_c.v[2].normal.extend(1.0)).xyz();
+                // Normal projection
+                tri_c.v[0].normal = (mat_model * mat_view * tri_c.v[0].normal.extend(0.0)).xyz().normalize();
+                tri_c.v[1].normal = (mat_model * mat_view * tri_c.v[1].normal.extend(0.0)).xyz().normalize();
+                tri_c.v[2].normal = (mat_model * mat_view * tri_c.v[2].normal.extend(0.0)).xyz().normalize();
 
                 // Scale into view
                 for vertex in tri_c.v.iter_mut() {
@@ -102,7 +103,7 @@ impl Renderer {
             }
         }
     }
-    fn depth_sort(&mut self) {
+    pub fn depth_sort(&mut self) {
         // Painters algorithm, depth sorting
         self.to_render.sort_by(|a, b| {
             let z1 = (a.v[0].pos.z + a.v[1].pos.z + a.v[2].pos.z) / 3.0;
@@ -112,14 +113,13 @@ impl Renderer {
     }
     pub fn draw(&mut self, canvas: &mut Canvas) {
         canvas.clear(0xFF020202);
-        self.depth_sort();
         let dir_light = Vec3::new(0.0, 0.0, 1.0).normalize();
         for tri in self.to_render.iter() {
             let lit0 = Vec3::dot(tri.v[0].normal, dir_light).abs();
             let lit1 = Vec3::dot(tri.v[1].normal, dir_light).abs();
             let lit2 = Vec3::dot(tri.v[2].normal, dir_light).abs();
             //println!("{:?} {:?} {:?} | {} {} {}", tri.v[0].normal, tri.v[0].normal,tri.v[0].normal, lit0, lit1, lit2);
-            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), scale_color(0xFF0202FF, lit0), scale_color(0xFF0202FF, lit1), scale_color(0xFF0202FF, lit2), true);
+            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), scale_color(tri.v[0].color, lit0), scale_color(tri.v[1].color, lit1), scale_color(tri.v[2].color, lit2), true);
             //draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
         }
         println!("Rendered {} triangles.", self.to_render.len());

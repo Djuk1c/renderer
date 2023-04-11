@@ -22,25 +22,24 @@ mod clipping;
 mod camera;
 
 // TODO:
-// fix screen clipping lighting fucked, finish camera
+// fix screen clipping lighting fucked
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
-// smooth shading
+// smooth shading, camera
 
 fn main() {
     // SDL Init
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem
-        .window("Render test", WIDTH as u32, HEIGHT as u32)
+        .window("Booba", WIDTH as u32, HEIGHT as u32)
         .position_centered()
         .build()
         .unwrap();
     let mut sdl_canvas = window
         .into_canvas()
-        //.present_vsync()
+        .present_vsync()    // So i dont have to calcualte deltatime for now
         .accelerated()
-        //.software()
         .build()
         .map_err(|e| e.to_string())
         .unwrap();
@@ -54,22 +53,18 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25);
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
     let mut cow = Model::new("models/skull_4k.obj");
-    //let mut goat = Model::new("models/goat.obj");
-    //let mut cube = Model::cube();
 
     cow.translation.z = 6.0;
     cow.translation.y = -0.5;
     cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (35 as f32).to_radians());
     cow.scale = Vec3::new(0.1, 0.1, 0.1);
-    //goat.translation = Vec3::new(18.0, 0.0, 50.0);
-    //goat.scale = Vec3::new(0.8, 0.8, 0.8);
-    //cube.translation.z = 5.0;
-    //cube.translation.y = 0.5;
 
-    // SDL Draw
     let mut frame = 0;
+    let mut last_mouse_x = 0.0;
+    let mut last_mouse_y = 0.0;
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -77,10 +72,6 @@ fn main() {
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     match keycode {
                         Keycode::Escape => break 'running,
-                        Keycode::W => camera.move_forward(),
-                        Keycode::S => camera.move_backward(),
-                        Keycode::A => camera.move_right(),
-                        Keycode::D => camera.move_left(),
                         _ => {}
                     }
                 }
@@ -88,28 +79,49 @@ fn main() {
             }
         }
 
+        // Process input
+        let keys: Vec<_> = event_pump
+            .keyboard_state()
+            .pressed_scancodes()
+            .filter_map(Keycode::from_scancode)
+            .collect();
+        if keys.contains(&Keycode::W) {
+            camera.move_forward();
+        }
+        if keys.contains(&Keycode::S) {
+            camera.move_backward();
+        }
+        if keys.contains(&Keycode::A) {
+            camera.move_left();
+        }
+        if keys.contains(&Keycode::D) {
+            camera.move_right();
+        }
+
+        let mouse_x = event_pump.mouse_state().x() as f32;
+        let mouse_y = event_pump.mouse_state().y() as f32;
+        let change_x = last_mouse_x - mouse_x;
+        let change_y = last_mouse_y - mouse_y;
+        last_mouse_x = mouse_x;
+        last_mouse_y = mouse_y;
+
+        camera.look(change_x, change_y);
+        // END Process input
+
         let start = Instant::now();
         // -------------------------------- //
         frame += 1;
-        let foo = (frame as f32 / 20.0).sin();
-        //goat.translation.z += foo;
-        //cow.translation.z -= foo;
         cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
-        //goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
-        //cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
         renderer.process_model(&cow, &camera);
         renderer.depth_sort();
         let duration = start.elapsed();
         println!("Process: {:?}", duration);
 
         let start = Instant::now();
-        //renderer.process_model(&goat);
-        //renderer.process_model(&cube);
         renderer.draw(&mut canvas);
         //draw_line(&mut canvas, IVec2::new(420, 20), IVec2::new(311, 102), 0xFFFF0000, 0xFF0000FF, None);
         let duration = start.elapsed();
         println!("Draw: {:?}", duration);
-        //println!("{:?}", camera.pos);
         // -------------------------------- //
 
         // Draw on SDL 
@@ -131,8 +143,8 @@ fn main() {
 
         sdl_canvas.copy(&texture, None, None).unwrap();
         sdl_canvas.present();
+        // END SDL Draw
     }
-    // END SDL Draw
 
     return;
 }

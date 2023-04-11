@@ -2,8 +2,8 @@ use glam::Vec3;
 use std::fs::File;
 use std::io::{self, BufRead};
 
-//const COLOR: u32 = 0xFF2020FF;
-const COLOR: u32 = 0xFF909090;
+const COLOR: u32 = 0xFF2020FF;
+//const COLOR: u32 = 0xFFB0B0B0;
 
 #[derive(Clone)]
 #[derive(Default)]

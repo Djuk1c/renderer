@@ -1,7 +1,7 @@
 use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles};
 use std::collections::VecDeque;
 
-use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::scale_color};
+use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::scale_color, camera::Camera};
 
 pub struct Renderer {
     to_render: Vec<Triangle>,
@@ -14,7 +14,7 @@ impl Renderer {
             mat_proj: proj,
         }
     }
-    pub fn process_model(&mut self, model: &Model, mat_view: &Mat4, canvas: &Canvas) {
+    pub fn process_model(&mut self, model: &Model, camera: &Camera) {
         let mut to_clip: Vec<Triangle> = vec![];
         let mat_model = model.get_model_mat();
 
@@ -24,26 +24,21 @@ impl Renderer {
             let mut p2 = mat_model * tri.v[1].pos.extend(1.0);
             let mut p3 = mat_model * tri.v[2].pos.extend(1.0);
 
+            // View transform
+            let mat_view = camera.get_view_mat();
+            p1 = mat_view * p1;
+            p2 = mat_view * p2;
+            p3 = mat_view * p3;
+
             // Calculate plane normal for clipping
             let line1 = p2 - p1;
             let line2 = p3 - p1;
             let normal = Vec3::cross(line1.xyz(), line2.xyz()).normalize();
 
             // Skip if side is invisible (Culling)
-            let vcamera = Vec3::new(0.0, 0.0, 0.0);
-            if Vec3::dot(normal, p1.xyz() - vcamera) >= 0.0 {
+            if Vec3::dot(normal, p1.xyz()) >= 0.0 {
                 continue;
             }
-
-            // Flat shading
-            //let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
-            //let lit = Vec3::dot(normal, dir_light).abs();
-            //let c = (RED & !0xFF) | (255.0 * lit) as u32;
-
-            // View transform
-            p1 = *mat_view * p1;
-            p2 = *mat_view * p2;
-            p3 = *mat_view * p3;
 
             // Clipping near plane
             let mut tri_to_clip = tri.clone();
@@ -58,10 +53,10 @@ impl Renderer {
                 tri_c.v[1].pos = self.mat_proj.project_point3(tri_c.v[1].pos);
                 tri_c.v[2].pos = self.mat_proj.project_point3(tri_c.v[2].pos);
 
-                // Normal * model matrix
-                tri_c.v[0].normal = (mat_model * tri_c.v[0].normal.extend(0.0)).xyz().normalize();
-                tri_c.v[1].normal = (mat_model * tri_c.v[1].normal.extend(0.0)).xyz().normalize();
-                tri_c.v[2].normal = (mat_model * tri_c.v[2].normal.extend(0.0)).xyz().normalize();
+                // Normal projection
+                tri_c.v[0].normal = (mat_model * mat_view * tri_c.v[0].normal.extend(0.0)).xyz().normalize();
+                tri_c.v[1].normal = (mat_model * mat_view * tri_c.v[1].normal.extend(0.0)).xyz().normalize();
+                tri_c.v[2].normal = (mat_model * mat_view * tri_c.v[2].normal.extend(0.0)).xyz().normalize();
 
                 // Scale into view
                 for vertex in tri_c.v.iter_mut() {

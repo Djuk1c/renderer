@@ -1,8 +1,8 @@
 use glam::Vec3;
 
 // Hardcoded so i can avoid vectors, will only have one canvas either way
-pub const WIDTH: usize = 1600;
-pub const HEIGHT: usize = 900;
+pub const WIDTH: usize = 640;
+pub const HEIGHT: usize = 480;
 
 pub struct Canvas {
     pub pixels: [u32; WIDTH * HEIGHT],

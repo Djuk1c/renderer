@@ -54,15 +54,15 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.01);
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25);
     let mut cow = Model::new("models/skull_4k.obj");
     //let mut goat = Model::new("models/goat.obj");
     //let mut cube = Model::cube();
 
-    cow.translation.z = 20.0;
-    cow.translation.y = -2.0;
+    cow.translation.z = 6.0;
+    cow.translation.y = -0.5;
     cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (35 as f32).to_radians());
-    cow.scale = Vec3::new(0.5, 0.5, 0.5);
+    cow.scale = Vec3::new(0.1, 0.1, 0.1);
     //goat.translation = Vec3::new(18.0, 0.0, 50.0);
     //goat.scale = Vec3::new(0.8, 0.8, 0.8);
     //cube.translation.z = 5.0;
@@ -71,17 +71,16 @@ fn main() {
     // SDL Draw
     let mut frame = 0;
     'running: loop {
-        let mut move_vec = Vec3::new(0.0, 0.0, 0.0);
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'running,
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     match keycode {
                         Keycode::Escape => break 'running,
-                        Keycode::W => move_vec.z += 1.0,
-                        Keycode::A => move_vec.x -= 1.0,
-                        Keycode::S => move_vec.z -= 1.0,
-                        Keycode::D => move_vec.x += 1.0,
+                        Keycode::W => camera.move_forward(),
+                        Keycode::S => camera.move_backward(),
+                        Keycode::A => camera.move_right(),
+                        Keycode::D => camera.move_left(),
                         _ => {}
                     }
                 }
@@ -91,7 +90,6 @@ fn main() {
 
         let start = Instant::now();
         // -------------------------------- //
-        camera.update(move_vec);
         frame += 1;
         let foo = (frame as f32 / 20.0).sin();
         //goat.translation.z += foo;
@@ -99,7 +97,7 @@ fn main() {
         cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         //goat.rotation = Quat::from_axis_angle(Vec3::new(0.0, 0.0, -1.0), (frame as f32).to_radians());
         //cube.rotation = Quat::from_axis_angle(Vec3::new(-0.2, 1.0, 0.0), (frame as f32).to_radians());
-        renderer.process_model(&cow, &camera.get_view_mat(), &canvas);
+        renderer.process_model(&cow, &camera);
         renderer.depth_sort();
         let duration = start.elapsed();
         println!("Process: {:?}", duration);
@@ -110,6 +108,7 @@ fn main() {
         renderer.draw(&mut canvas);
         let duration = start.elapsed();
         println!("Draw: {:?}", duration);
+        println!("{:?}", camera.pos);
         // -------------------------------- //
 
         // Draw on SDL 

@@ -38,7 +38,7 @@ fn main() {
         .unwrap();
     let mut sdl_canvas = window
         .into_canvas()
-        .present_vsync()
+        //.present_vsync()
         .accelerated()
         //.software()
         .build()
@@ -106,9 +106,10 @@ fn main() {
         //renderer.process_model(&goat);
         //renderer.process_model(&cube);
         renderer.draw(&mut canvas);
+        //draw_line(&mut canvas, IVec2::new(420, 20), IVec2::new(311, 102), 0xFFFF0000, 0xFF0000FF, None);
         let duration = start.elapsed();
         println!("Draw: {:?}", duration);
-        println!("{:?}", camera.pos);
+        //println!("{:?}", camera.pos);
         // -------------------------------- //
 
         // Draw on SDL 

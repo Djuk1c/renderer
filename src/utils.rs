@@ -32,33 +32,22 @@ pub fn default_mat_proj() -> Mat4 {
 }
 
 pub fn scale_color(color: u32, scale: f32) -> u32 {
-    let mut b = ((color >> (8 * 0)) & 0xFF) as u8;
-    let mut g = ((color >> (8 * 1)) & 0xFF) as u8;
-    let mut r = ((color >> (8 * 2)) & 0xFF) as u8;
+    let [_, r, g, b] = color.to_be_bytes();
 
-    b = (b as f32 * scale) as u8;
-    g = (g as f32 * scale) as u8;
-    r = (r as f32 * scale) as u8;
+    let r = (r as f32 * scale) as u8;
+    let g = (g as f32 * scale) as u8;
+    let b = (b as f32 * scale) as u8;
 
-    let val = u32::from_be_bytes([0xFF, r, g, b]);
-    return val;
+    u32::from_be_bytes([0xFF, r, g, b])
 }
 
 pub fn add_colors(color1: u32, color2: u32) -> u32 {
-    let b1 = ((color1 >> (8 * 0)) & 0xFF) as u8;
-    let g1 = ((color1 >> (8 * 1)) & 0xFF) as u8;
-    let r1 = ((color1 >> (8 * 2)) & 0xFF) as u8;
+    let [_, r1, g1, b1] = color1.to_be_bytes();
+    let [_, r2, g2, b2] = color2.to_be_bytes();
 
-    let b2 = ((color2 >> (8 * 0)) & 0xFF) as u8;
-    let g2 = ((color2 >> (8 * 1)) & 0xFF) as u8;
-    let r2 = ((color2 >> (8 * 2)) & 0xFF) as u8;
+    let r = r1.saturating_add(r2);
+    let g = g1.saturating_add(g2);
+    let b = b1.saturating_add(b2);
 
-    let val = u32::from_be_bytes([
-        0xFF,
-        (b1 + b2).clamp(0, 255),
-        (g1 + g2).clamp(0, 255),
-        (r1 + r2).clamp(0, 255),
-    ]);
-
-    return val;
+    u32::from_be_bytes([0xFF, r, g, b])
 }

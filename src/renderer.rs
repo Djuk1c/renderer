@@ -15,7 +15,7 @@ impl Renderer {
         }
     }
     pub fn process_model(&mut self, model: &Model, camera: &Camera) {
-        let mut to_clip: Vec<Triangle> = vec![];
+        let mut to_clip = Vec::<Triangle>::new();
         let mat_model = model.get_model_mat();
 
         for tri in model.mesh.triangles.iter() {

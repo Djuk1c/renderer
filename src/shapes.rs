@@ -1,3 +1,4 @@
+use std::cmp;
 use glam::{IVec2, Vec2};
 
 use crate::canvas::{Canvas, WIDTH, HEIGHT};
@@ -14,11 +15,12 @@ pub fn draw_triangle(
     color3: u32,
     fill: bool,
 ) {
-    let mut raster_data: HashMap<i32, (i32, i32)> = HashMap::new();
+    let raster_data_size = cmp::max(cmp::max(p1.y, p2.y), p3.y) - cmp::min(cmp::min(p1.y, p2.y), p3.y) + 1;
+    let mut raster_data: HashMap<i32, (i32, i32)> = HashMap::with_capacity(raster_data_size as usize);
 
     // For each draw point in lines
     // Store the lowest and highest X for each Y
-    // Draw horizontal lines from that data
+    // Draw horizontal lines from that data (Scanline)
     if fill {
         draw_line(canvas, p1, p2, color1, color2, Some(&mut raster_data));
         draw_line(canvas, p1, p3, color1, color3, Some(&mut raster_data));
@@ -54,10 +56,16 @@ pub fn draw_line(
     let mut current_x: i32 = p1.x;
     let mut current_y: i32 = p1.y;
 
-    let mut points: Vec::<IVec2> = vec![];
+    let length = (p1 - p2).abs().max_element() + 1;
 
-    loop {
-        points.push(IVec2::new(current_x, current_y));
+    for i in 0..length {
+        let ni = length - i;
+        let d1 = ni as f32 / length as f32;
+        let d2 = i as f32 / length as f32;
+        let c1 = scale_color(color1, d1);
+        let c2 = scale_color(color2, d2);
+        let color = add_colors(c1, c2);
+        canvas.put_pixel(current_x, current_y, color);
 
         // Scanline
         // Store min_x and max_y for each Y, so i can later draw hor lines and fill the triangle
@@ -75,20 +83,6 @@ pub fn draw_line(
             };
         }
 
-        if current_x == p2.x && current_y == p2.y {
-            for (i, point) in points.iter().enumerate() {
-                let n = points.len() as u32;
-                let i = i as u32;
-                let ni = n - i;
-                let d1 = ni as f32 / n as f32;
-                let d2 = i as f32 / n as f32;
-                let c1 = scale_color(color1, d1);
-                let c2 = scale_color(color2, d2);
-                let color = add_colors(c1, c2);
-                canvas.put_pixel(point.x, point.y, color);
-            }
-            return;
-        }
         let error2: i32 = error;
 
         if error2 > -dx {

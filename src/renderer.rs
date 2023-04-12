@@ -6,12 +6,14 @@ use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canv
 pub struct Renderer {
     to_render: Vec<Triangle>,
     mat_proj: Mat4,
+    pub wireframe: bool,
 }
 impl Renderer {
     pub fn new(proj: Mat4) -> Self {
         Self {
             to_render: Vec::<Triangle>::new(),
             mat_proj: proj,
+            wireframe: false,
         }
     }
     pub fn process_model(&mut self, model: &Model, camera: &Camera) {
@@ -120,7 +122,11 @@ impl Renderer {
             let lit2 = Vec3::dot(tri.v[2].normal, dir_light).abs();
             //println!("{:?} {:?} {:?} | {} {} {}", tri.v[0].normal, tri.v[0].normal,tri.v[0].normal, lit0, lit1, lit2);
             draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), scale_color(tri.v[0].color, lit0), scale_color(tri.v[1].color, lit1), scale_color(tri.v[2].color, lit2), true);
-            //draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+        }
+        if self.wireframe {
+            for tri in self.to_render.iter() {
+                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+            }
         }
         println!("Rendered {} triangles.", self.to_render.len());
         self.to_render.clear();

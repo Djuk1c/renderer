@@ -17,7 +17,7 @@ impl Camera {
             front: Vec3::new(0.0, 0.0, -1.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             sensitivity,
-            yaw: 270.0,
+            yaw: 0.0,
             pitch: 0.0,
         }
     }
@@ -38,8 +38,8 @@ impl Camera {
     }
     pub fn look(&mut self, x: f32, y: f32) {
         println!("{} {} {} {}", x, y, self.yaw, self.pitch);
-        let x_offset = (x) * self.sensitivity;
-        let y_offset = (y) * self.sensitivity;
+        let x_offset = x * self.sensitivity;
+        let y_offset = y * self.sensitivity;
 
         self.yaw -= x_offset;
         self.pitch -= y_offset;

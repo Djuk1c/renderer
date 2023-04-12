@@ -30,6 +30,9 @@ mod camera;
 fn main() {
     // SDL Init
     let sdl_context = sdl2::init().unwrap();
+    sdl_context.mouse().show_cursor(false);
+    sdl_context.mouse().capture(true);
+    sdl_context.mouse().set_relative_mouse_mode(true);
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem
         .window("Booba", WIDTH as u32, HEIGHT as u32)
@@ -72,6 +75,7 @@ fn main() {
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     match keycode {
                         Keycode::Escape => break 'running,
+                        Keycode::F1 => { renderer.wireframe = !renderer.wireframe }
                         _ => {}
                     }
                 }

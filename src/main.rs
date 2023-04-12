@@ -61,7 +61,6 @@ fn main() {
 
     cow.translation.z = 6.0;
     cow.translation.y = -0.5;
-    cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (35 as f32).to_radians());
     cow.scale = Vec3::new(0.1, 0.1, 0.1);
 
     let mut frame = 0;

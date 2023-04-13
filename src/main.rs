@@ -6,7 +6,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
 
-use canvas::{Canvas, HEIGHT, WIDTH};
+use canvas::{Canvas, HEIGHT, WIDTH, W_WIDTH, W_HEIGHT};
 use renderer::Renderer;
 use shapes::{draw_line, draw_triangle};
 use utils::default_mat_proj;
@@ -22,7 +22,7 @@ mod clipping;
 mod camera;
 
 // TODO:
-// fix screen clipping lighting fucked
+// fix screen clipping lighting, textures, zbuffer, animations, specular light
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
 // smooth shading, camera
@@ -46,6 +46,8 @@ fn main() {
         .build()
         .map_err(|e| e.to_string())
         .unwrap();
+    let window = sdl_canvas.window_mut();
+    window.set_size(W_WIDTH, W_HEIGHT).unwrap();
     let texture_creator = sdl_canvas.texture_creator();
     let mut texture = texture_creator
         .create_texture_streaming(PixelFormatEnum::RGB24, WIDTH as u32, HEIGHT as u32)

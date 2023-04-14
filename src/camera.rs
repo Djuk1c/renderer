@@ -37,9 +37,8 @@ impl Camera {
         self.pos += Vec3::normalize(Vec3::cross(self.front, self.up)) * self.speed;
     }
     pub fn look(&mut self, x: f32, y: f32) {
-        println!("{} {} {} {}", x, y, self.yaw, self.pitch);
-        let x_offset = (x) * self.sensitivity;
-        let y_offset = (y) * self.sensitivity;
+        let x_offset = x * self.sensitivity;
+        let y_offset = y * self.sensitivity;
 
         self.yaw -= x_offset;
         self.pitch -= y_offset;

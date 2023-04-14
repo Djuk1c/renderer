@@ -5,8 +5,7 @@ use std::io::{self, BufRead};
 const COLOR: u32 = 0xFF2020FF;
 //const COLOR: u32 = 0xFFB0B0B0;
 
-#[derive(Clone)]
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Vertex {
     pub pos: Vec3,
     pub normal: Vec3,
@@ -54,8 +53,7 @@ impl Mesh {
         for line in iter {
             let line = line.unwrap();
 
-            if line.chars().nth(0).unwrap() == 'v' &&
-                line.chars().nth(1).unwrap() == 'n' {
+            if line.starts_with("vn") {
                 // Vertex normals
                 let normal = line
                     .split(" ")
@@ -66,7 +64,7 @@ impl Mesh {
                     y: normal[1],
                     z: normal[2],
                 });
-            } else if line.chars().nth(0).unwrap() == 'v' {
+            } else if line.starts_with("v") {
                 // Vertex pos
                 let vertex = line
                     .split(" ")
@@ -77,7 +75,7 @@ impl Mesh {
                     y: vertex[1],
                     z: vertex[2],
                 });
-            } else if line.chars().nth(0).unwrap() == 'f' {
+            } else if line.starts_with("f") {
                 // FaceIndex//NormalIndex
                 let f = line
                     .split([' ', '/'].as_ref())
@@ -105,41 +103,4 @@ impl Mesh {
         }
         return model;
     }
-
-    // Debug
-    //#[allow(dead_code)]
-    //pub fn cube() -> Self {
-    //    let mut cube = Self::new();
-    //    // South
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-    //    // East
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 0.0, 1.0), 0));
-    //    // North
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 0.0, 1.0), 0));
-    //    // West
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0));
-    //    // Top
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 0.0), 0));
-    //    // Bottom
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-    //    return cube;
-    //}
 }

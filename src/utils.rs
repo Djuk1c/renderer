@@ -51,3 +51,14 @@ pub fn add_colors(color1: u32, color2: u32) -> u32 {
 
     u32::from_be_bytes([0xFF, r, g, b])
 }
+
+pub fn sub_colors(color1: u32, color2: u32) -> u32 {
+    let [_, r1, g1, b1] = color1.to_be_bytes();
+    let [_, r2, g2, b2] = color2.to_be_bytes();
+
+    let r = r1.saturating_sub(r2);
+    let g = g1.saturating_sub(g2);
+    let b = b1.saturating_sub(b2);
+
+    u32::from_be_bytes([0xFF, r, g, b])
+}

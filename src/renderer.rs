@@ -1,17 +1,19 @@
-use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles};
+use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles, Mat3};
 use std::collections::VecDeque;
 
-use crate::{mesh::Triangle, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::scale_color, camera::Camera};
+use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::*, camera::Camera};
 
 pub struct Renderer {
     to_render: Vec<Triangle>,
     mat_proj: Mat4,
+    pub wireframe: bool,
 }
 impl Renderer {
     pub fn new(proj: Mat4) -> Self {
         Self {
             to_render: Vec::<Triangle>::new(),
             mat_proj: proj,
+            wireframe: false,
         }
     }
     pub fn process_model(&mut self, model: &Model, camera: &Camera) {
@@ -23,6 +25,22 @@ impl Renderer {
             let mut p1 = mat_model * tri.v[0].pos.extend(1.0);
             let mut p2 = mat_model * tri.v[1].pos.extend(1.0);
             let mut p3 = mat_model * tri.v[2].pos.extend(1.0);
+            let mod_tran_inv = Mat3::from_mat4(mat_model).inverse().transpose();    // For normals
+            let n1 = (mod_tran_inv * tri.v[0].normal).normalize();
+            let n2 = (mod_tran_inv * tri.v[1].normal).normalize();
+            let n3 = (mod_tran_inv * tri.v[2].normal).normalize();
+
+            let light_color: u32 = 0xFFFFFFFF;
+            // Ambient light
+            let ambient_strength = 0.05;
+
+            // Diffuse light
+            let dir_light = Vec3::new(0.0, 0.0, 1.0).normalize();
+            let lit1 = Vec3::dot(n1, (dir_light - p1.xyz()).normalize()).clamp(0.0, 1.0);
+            let lit2 = Vec3::dot(n2, (dir_light - p2.xyz()).normalize()).clamp(0.0, 1.0);
+            let lit3 = Vec3::dot(n3, (dir_light - p3.xyz()).normalize()).clamp(0.0, 1.0);
+
+            // Specular light
 
             // View transform
             let mat_view = camera.get_view_mat();
@@ -40,23 +58,20 @@ impl Renderer {
                 continue;
             }
 
-            // Clipping near plane
-            let mut tri_to_clip = tri.clone();
-            tri_to_clip.v[0].pos = p1.xyz();
-            tri_to_clip.v[1].pos = p2.xyz();
-            tri_to_clip.v[2].pos = p3.xyz();
-            let mut clipped = clip_triangle(&tri_to_clip, &Vec3::new(0.0, 0.0, 0.1), &Vec3::new(0.0, 0.0, 1.0));
+            // Create tri to clip and project
+            let tri_to_clip = Triangle::new(
+                Vertex::new(p1.xyz(), n1.xyz(), scale_color(tri.v[0].color, ambient_strength + lit1)),
+                Vertex::new(p2.xyz(), n2.xyz(), scale_color(tri.v[1].color, ambient_strength + lit2)),
+                Vertex::new(p3.xyz(), n3.xyz(), scale_color(tri.v[2].color, ambient_strength + lit3)),
+            );
 
+            // Clip triangle
+            let mut clipped = clip_triangle(&tri_to_clip, &Vec3::new(0.0, 0.0, 0.1), &Vec3::new(0.0, 0.0, 1.0));
             for mut tri_c in clipped.iter_mut() {
                 // Project it
                 tri_c.v[0].pos = self.mat_proj.project_point3(tri_c.v[0].pos);
                 tri_c.v[1].pos = self.mat_proj.project_point3(tri_c.v[1].pos);
                 tri_c.v[2].pos = self.mat_proj.project_point3(tri_c.v[2].pos);
-
-                // Normal projection
-                tri_c.v[0].normal = (mat_model * mat_view * tri_c.v[0].normal.extend(0.0)).xyz().normalize();
-                tri_c.v[1].normal = (mat_model * mat_view * tri_c.v[1].normal.extend(0.0)).xyz().normalize();
-                tri_c.v[2].normal = (mat_model * mat_view * tri_c.v[2].normal.extend(0.0)).xyz().normalize();
 
                 // Scale into view
                 for vertex in tri_c.v.iter_mut() {
@@ -113,14 +128,13 @@ impl Renderer {
     }
     pub fn draw(&mut self, canvas: &mut Canvas) {
         canvas.clear(0xFF020202);
-        let dir_light = Vec3::new(0.0, 0.0, 1.0).normalize();
         for tri in self.to_render.iter() {
-            let lit0 = Vec3::dot(tri.v[0].normal, dir_light).abs();
-            let lit1 = Vec3::dot(tri.v[1].normal, dir_light).abs();
-            let lit2 = Vec3::dot(tri.v[2].normal, dir_light).abs();
-            //println!("{:?} {:?} {:?} | {} {} {}", tri.v[0].normal, tri.v[0].normal,tri.v[0].normal, lit0, lit1, lit2);
-            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), scale_color(tri.v[0].color, lit0), scale_color(tri.v[1].color, lit1), scale_color(tri.v[2].color, lit2), true);
-            //draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
+        }
+        if self.wireframe {
+            for tri in self.to_render.iter() {
+                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+            }
         }
         println!("Rendered {} triangles.", self.to_render.len());
         self.to_render.clear();

@@ -22,10 +22,10 @@ mod clipping;
 mod camera;
 
 // TODO:
-// fix screen clipping lighting, textures, zbuffer, animations, specular light
+// textures, zbuffer, animations, specular light, color struct
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
-// smooth shading, camera
+// smooth shading, camera, fix screen clipping lighting
 
 fn main() {
     // SDL Init
@@ -60,10 +60,17 @@ fn main() {
     let mut renderer = Renderer::new(default_mat_proj());
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
     let mut cow = Model::new("models/skull_4k.obj");
+    let mut cube = Model::new("models/cube.obj");
 
     cow.translation.z = 6.0;
     cow.translation.y = -0.5;
     cow.scale = Vec3::new(0.1, 0.1, 0.1);
+    cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (45.0_f32).to_radians());
+    cube.translation.z = 6.0;
+    cube.translation.y = -1.5;
+    cube.translation.x = 1.0;
+    cube.scale = Vec3::new(0.1, 0.1, 0.1);
+    cube.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (45.0_f32).to_radians());
 
     let mut frame = 0;
     let mut last_mouse_x = 0.0;
@@ -116,8 +123,10 @@ fn main() {
         let start = Instant::now();
         // -------------------------------- //
         frame += 1;
-        cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
+        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
+        //cube.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         renderer.process_model(&cow, &camera);
+        //renderer.process_model(&cube, &camera);
         renderer.depth_sort();
         let duration = start.elapsed();
         println!("Process: {:?}", duration);

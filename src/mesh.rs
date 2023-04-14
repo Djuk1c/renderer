@@ -5,8 +5,7 @@ use std::io::{self, BufRead};
 const COLOR: u32 = 0xFF2020FF;
 //const COLOR: u32 = 0xFFB0B0B0;
 
-#[derive(Clone)]
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Vertex {
     pub pos: Vec3,
     pub normal: Vec3,
@@ -105,41 +104,4 @@ impl Mesh {
         }
         return model;
     }
-
-    // Debug
-    //#[allow(dead_code)]
-    //pub fn cube() -> Self {
-    //    let mut cube = Self::new();
-    //    // South
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-    //    // East
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 0.0, 1.0), 0));
-    //    // North
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 0.0, 1.0), 0));
-    //    // West
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(0.0, 1.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0));
-    //    // Top
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 1.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 1.0, 0.0), 0));
-    //    // Bottom
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), 0));
-    //    cube.triangles
-    //        .push(Triangle::new(Vec3::new(1.0, 0.0, 1.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), 0));
-    //    return cube;
-    //}
 }

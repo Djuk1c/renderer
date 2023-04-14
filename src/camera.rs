@@ -3,7 +3,7 @@ use glam::{Vec3, Mat4};
 pub struct Camera {
     pos: Vec3,
     speed: f32,
-    pub front: Vec3,
+    front: Vec3,
     up: Vec3,
     sensitivity: f32,
     yaw: f32,

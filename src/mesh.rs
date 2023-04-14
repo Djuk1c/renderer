@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::{Vec3, Vec2};
 use std::fs::File;
 use std::io::{self, BufRead};
 
@@ -9,11 +9,12 @@ const COLOR: u32 = 0xFF2020FF;
 pub struct Vertex {
     pub pos: Vec3,
     pub normal: Vec3,
+    pub texture: Vec2,
     pub color: u32,
 }
 impl Vertex {
-    pub fn new(pos: Vec3, normal: Vec3, color: u32) -> Self {
-        Self { pos, normal, color }
+    pub fn new(pos: Vec3, normal: Vec3, texture: Vec2, color: u32) -> Self {
+        Self { pos, normal, texture, color }
     }
 }
 
@@ -47,6 +48,7 @@ impl Mesh {
         let mut model = Self::new();
         let mut pos = Vec::<Vec3>::new();
         let mut norm = Vec::<Vec3>::new();
+        let mut tex = Vec::<Vec2>::new();
 
         let file = File::open(path).unwrap();
         let iter = io::BufReader::new(file).lines();
@@ -64,6 +66,16 @@ impl Mesh {
                     y: normal[1],
                     z: normal[2],
                 });
+            } else if line.starts_with("vt") {
+                // Texture
+                let texture = line
+                    .split(" ")
+                    .filter_map(|s| s.parse::<f32>().ok())
+                    .collect::<Vec<_>>();
+                tex.push(Vec2 {
+                    x: texture[0],
+                    y: texture[1],
+                });
             } else if line.starts_with("v") {
                 // Vertex pos
                 let vertex = line
@@ -76,29 +88,57 @@ impl Mesh {
                     z: vertex[2],
                 });
             } else if line.starts_with("f") {
-                // FaceIndex//NormalIndex
+                // FaceIndex/TextureIndex/NormalIndex
                 let f = line
                     .split([' ', '/'].as_ref())
                     .filter_map(|s| s.parse::<u32>().ok())
                     .collect::<Vec<_>>();
 
-                model.triangles.push(Triangle::new(
-                    Vertex {
-                        pos: (pos[(f[0] - 1) as usize]),
-                        normal: (norm[(f[1] - 1) as usize]),
-                        color: (COLOR) 
-                    },
-                    Vertex {
-                        pos: (pos[(f[2] - 1) as usize]),
-                        normal: (norm[(f[3] - 1) as usize]),
-                        color: (COLOR)
-                    },
-                    Vertex {
-                        pos: (pos[(f[4] - 1) as usize]),
-                        normal: (norm[(f[5] - 1) as usize]),
-                        color: (COLOR) 
-                    },
-                ));
+                if tex.len() == 0 {
+                    // Non textured mesh
+                    model.triangles.push(Triangle::new(
+                        Vertex {
+                            pos: (pos[(f[0] - 1) as usize]),
+                            normal: (norm[(f[1] - 1) as usize]),
+                            texture: Vec2::new(-1.0, -1.0),
+                            color: (COLOR) 
+                        },
+                        Vertex {
+                            pos: (pos[(f[2] - 1) as usize]),
+                            normal: (norm[(f[3] - 1) as usize]),
+                            texture: Vec2::new(-1.0, -1.0),
+                            color: (COLOR)
+                        },
+                        Vertex {
+                            pos: (pos[(f[4] - 1) as usize]),
+                            normal: (norm[(f[5] - 1) as usize]),
+                            texture: Vec2::new(-1.0, -1.0),
+                            color: (COLOR) 
+                        },
+                    ));
+                } else {
+                    // Textured mesh
+                    model.triangles.push(Triangle::new(
+                        Vertex {
+                            pos: (pos[(f[0] - 1) as usize]),
+                            texture: (tex[(f[1] - 1) as usize]),
+                            normal: (norm[(f[2] - 1) as usize]),
+                            color: (COLOR) 
+                        },
+                        Vertex {
+                            pos: (pos[(f[3] - 1) as usize]),
+                            texture: (tex[(f[4] - 1) as usize]),
+                            normal: (norm[(f[5] - 1) as usize]),
+                            color: (COLOR)
+                        },
+                        Vertex {
+                            pos: (pos[(f[6] - 1) as usize]),
+                            texture: (tex[(f[7] - 1) as usize]),
+                            normal: (norm[(f[8] - 1) as usize]),
+                            color: (COLOR) 
+                        },
+                    ));
+                }
             }
         }
         return model;

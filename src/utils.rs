@@ -1,10 +1,11 @@
+#![allow(dead_code)]
 use crate::canvas::{WIDTH, HEIGHT};
-use std::{fs::File, io::Write};
+use std::fs::File;
+use std::io::{self, BufRead, Write};
 use std::f32::consts::PI;
 
 use glam::Mat4;
 
-#[allow(dead_code)]
 pub fn save_to_ppm<const SIZE: usize>(pixels: [u32; SIZE]) {
     let mut file = File::create("output.ppm").unwrap();
     file.write(format!("P6\n{} {} 255\n", WIDTH, HEIGHT).as_bytes())
@@ -20,6 +21,29 @@ pub fn save_to_ppm<const SIZE: usize>(pixels: [u32; SIZE]) {
             file.write_all(&bytes).unwrap();
         }
     }
+}
+
+pub fn load_ppm(path: &str) -> (Vec<u32>, u32, u32) {
+    // P3
+    let mut result = Vec::<u32>::new();
+    let (width, height): (u32, u32);
+    let file = File::open(path).unwrap();
+    let mut iter = io::BufReader::new(file).lines();
+    let size = iter.nth(0).unwrap().unwrap().split(" ").filter_map(|s| s.parse::<u32>().ok()).collect::<Vec<_>>();
+    (width, height) = (size[0], size[1]);
+    for l in iter {
+        let line = l
+            .unwrap()
+            .split(" ")
+            .filter_map(|s| s.parse::<u8>().ok())
+            .collect::<Vec<_>>();
+
+        for i in (0..line.len()).step_by(3) {
+            result.push(u32::from_be_bytes([0xFF, line[i], line[i+1], line[i+2]]));
+        }
+    }
+
+    return (result, width, height);
 }
 
 pub fn default_mat_proj() -> Mat4 {

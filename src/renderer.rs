@@ -60,9 +60,9 @@ impl Renderer {
 
             // Create tri to clip and project
             let tri_to_clip = Triangle::new(
-                Vertex::new(p1.xyz(), n1.xyz(), scale_color(tri.v[0].color, ambient_strength + lit1)),
-                Vertex::new(p2.xyz(), n2.xyz(), scale_color(tri.v[1].color, ambient_strength + lit2)),
-                Vertex::new(p3.xyz(), n3.xyz(), scale_color(tri.v[2].color, ambient_strength + lit3)),
+                Vertex::new(p1.xyz(), n1.xyz(), tri.v[0].texture, scale_color(tri.v[0].color, ambient_strength + lit1)),
+                Vertex::new(p2.xyz(), n2.xyz(), tri.v[1].texture, scale_color(tri.v[1].color, ambient_strength + lit2)),
+                Vertex::new(p3.xyz(), n3.xyz(), tri.v[2].texture, scale_color(tri.v[2].color, ambient_strength + lit3)),
             );
 
             // Clip triangle

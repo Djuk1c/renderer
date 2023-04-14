@@ -9,7 +9,7 @@ use sdl2::pixels::PixelFormatEnum;
 use canvas::{Canvas, HEIGHT, WIDTH, W_WIDTH, W_HEIGHT};
 use renderer::Renderer;
 use shapes::{draw_line, draw_triangle};
-use utils::default_mat_proj;
+use utils::{default_mat_proj, load_ppm};
 use camera::*;
 
 mod shapes;
@@ -22,7 +22,7 @@ mod clipping;
 mod camera;
 
 // TODO:
-// textures, zbuffer, animations, specular light, color struct
+// textures, zbuffer, animations, specular light, color struct, fog
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
 // smooth shading, camera, fix screen clipping lighting
@@ -59,8 +59,9 @@ fn main() {
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
-    let mut cow = Model::new("models/skull_4k.obj");
+    let mut cow = Model::new("models/cube.obj");
     let mut cube = Model::new("models/cube.obj");
+    let (tex, width, height) = load_ppm("textures/wall.ppm");
 
     cow.translation.z = 6.0;
     cow.translation.y = -0.5;

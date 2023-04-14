@@ -53,8 +53,7 @@ impl Mesh {
         for line in iter {
             let line = line.unwrap();
 
-            if line.chars().nth(0).unwrap() == 'v' &&
-                line.chars().nth(1).unwrap() == 'n' {
+            if line.starts_with("vn") {
                 // Vertex normals
                 let normal = line
                     .split(" ")
@@ -65,7 +64,7 @@ impl Mesh {
                     y: normal[1],
                     z: normal[2],
                 });
-            } else if line.chars().nth(0).unwrap() == 'v' {
+            } else if line.starts_with("v") {
                 // Vertex pos
                 let vertex = line
                     .split(" ")
@@ -76,7 +75,7 @@ impl Mesh {
                     y: vertex[1],
                     z: vertex[2],
                 });
-            } else if line.chars().nth(0).unwrap() == 'f' {
+            } else if line.starts_with("f") {
                 // FaceIndex//NormalIndex
                 let f = line
                     .split([' ', '/'].as_ref())

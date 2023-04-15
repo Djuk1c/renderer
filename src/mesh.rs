@@ -11,10 +11,11 @@ pub struct Vertex {
     pub normal: Vec3,
     pub texture: Vec2,
     pub color: u32,
+    pub lit: f32,
 }
 impl Vertex {
-    pub fn new(pos: Vec3, normal: Vec3, texture: Vec2, color: u32) -> Self {
-        Self { pos, normal, texture, color }
+    pub fn new(pos: Vec3, normal: Vec3, texture: Vec2, color: u32, lit: f32) -> Self {
+        Self { pos, normal, texture, color, lit }
     }
 }
 
@@ -93,6 +94,7 @@ impl Mesh {
                     .split([' ', '/'].as_ref())
                     .filter_map(|s| s.parse::<u32>().ok())
                     .collect::<Vec<_>>();
+                //println!("{}", line);
 
                 if tex.len() == 0 {
                     // Non textured mesh
@@ -101,19 +103,22 @@ impl Mesh {
                             pos: (pos[(f[0] - 1) as usize]),
                             normal: (norm[(f[1] - 1) as usize]),
                             texture: Vec2::new(-1.0, -1.0),
-                            color: (COLOR) 
+                            color: (COLOR),
+                            lit: 0.0
                         },
                         Vertex {
                             pos: (pos[(f[2] - 1) as usize]),
                             normal: (norm[(f[3] - 1) as usize]),
                             texture: Vec2::new(-1.0, -1.0),
-                            color: (COLOR)
+                            color: (COLOR),
+                            lit: 0.0
                         },
                         Vertex {
                             pos: (pos[(f[4] - 1) as usize]),
                             normal: (norm[(f[5] - 1) as usize]),
                             texture: Vec2::new(-1.0, -1.0),
-                            color: (COLOR) 
+                            color: (COLOR),
+                            lit: 0.0
                         },
                     ));
                 } else {
@@ -123,22 +128,26 @@ impl Mesh {
                             pos: (pos[(f[0] - 1) as usize]),
                             texture: (tex[(f[1] - 1) as usize]),
                             normal: (norm[(f[2] - 1) as usize]),
-                            color: (COLOR) 
+                            color: (COLOR),
+                            lit: 0.0
                         },
                         Vertex {
                             pos: (pos[(f[3] - 1) as usize]),
                             texture: (tex[(f[4] - 1) as usize]),
                             normal: (norm[(f[5] - 1) as usize]),
-                            color: (COLOR)
+                            color: (COLOR),
+                            lit: 0.0
                         },
                         Vertex {
                             pos: (pos[(f[6] - 1) as usize]),
                             texture: (tex[(f[7] - 1) as usize]),
                             normal: (norm[(f[8] - 1) as usize]),
-                            color: (COLOR) 
+                            color: (COLOR),
+                            lit: 0.0
                         },
                     ));
                 }
+                //println!("{} {} {}", tex[(f[1] - 1) as usize], tex[(f[4] - 1) as usize], tex[(f[7] - 1) as usize]);
             }
         }
         return model;

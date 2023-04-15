@@ -1,5 +1,5 @@
 use std::time::{Duration, Instant};
-use glam::{Vec3, Quat, IVec2};
+use glam::{Vec3, Quat, IVec2, Vec2};
 use mesh::Vertex;
 use model::Model;
 use sdl2::event::Event;
@@ -9,6 +9,7 @@ use sdl2::pixels::PixelFormatEnum;
 use canvas::{Canvas, HEIGHT, WIDTH, W_WIDTH, W_HEIGHT};
 use renderer::Renderer;
 use shapes::{draw_line, draw_triangle};
+use shapes_textured::*;
 use utils::{default_mat_proj, load_ppm};
 use camera::*;
 
@@ -20,9 +21,10 @@ mod model;
 mod renderer;
 mod clipping;
 mod camera;
+mod shapes_textured;
 
 // TODO:
-// textures, zbuffer, animations, specular light, color struct, fog
+// textures, zbuffer, animations, specular light, color struct, fog, light color
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
 // smooth shading, camera, fix screen clipping lighting
@@ -61,12 +63,11 @@ fn main() {
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
     let mut cow = Model::new("models/cube.obj");
     let mut cube = Model::new("models/cube.obj");
-    let (tex, width, height) = load_ppm("textures/wall.ppm");
+    let (tex, width, height) = load_ppm("textures/kak.ppm");
 
-    cow.translation.z = 6.0;
-    cow.translation.y = -0.5;
-    cow.scale = Vec3::new(0.1, 0.1, 0.1);
+    cow.translation.z = 30.0;
     cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (45.0_f32).to_radians());
+    cow.scale = Vec3::new(10.0, 10.0, 10.0);
     cube.translation.z = 6.0;
     cube.translation.y = -1.5;
     cube.translation.x = 1.0;
@@ -98,6 +99,7 @@ fn main() {
             .pressed_scancodes()
             .filter_map(Keycode::from_scancode)
             .collect();
+        // Move
         if keys.contains(&Keycode::W) {
             camera.move_forward();
         }
@@ -110,6 +112,19 @@ fn main() {
         if keys.contains(&Keycode::D) {
             camera.move_right();
         }
+        // Look
+        if keys.contains(&Keycode::Up) {
+            camera.look(0.0, 2.0);
+        }
+        if keys.contains(&Keycode::Down) {
+            camera.look(0.0, -2.0);
+        }
+        if keys.contains(&Keycode::Left) {
+            camera.look(2.0, 0.0);
+        }
+        if keys.contains(&Keycode::Right) {
+            camera.look(-2.0, 0.0);
+        }
 
         let mouse_x = event_pump.mouse_state().x() as f32;
         let mouse_y = event_pump.mouse_state().y() as f32;
@@ -118,13 +133,13 @@ fn main() {
         last_mouse_x = mouse_x;
         last_mouse_y = mouse_y;
 
-        camera.look(change_x, change_y);
+        //camera.look(change_x, change_y);
         // END Process input
 
         let start = Instant::now();
         // -------------------------------- //
         frame += 1;
-        //cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
+        cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         //cube.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
         renderer.process_model(&cow, &camera);
         //renderer.process_model(&cube, &camera);
@@ -133,9 +148,24 @@ fn main() {
         println!("Process: {:?}", duration);
 
         let start = Instant::now();
-        renderer.draw(&mut canvas);
+        renderer.draw(&mut canvas, Some(&tex));
         //draw_line(&mut canvas, IVec2::new(420, 20), IVec2::new(311, 102), 0xFFFF0000, 0xFF0000FF, None);
+        //draw_triangle_tex(&mut canvas, 
+        //    IVec2::new(200, 200), IVec2::new(550, 100), IVec2::new(400, 550),
+        //    Vec2::new(0.0, 0.0),
+        //    Vec2::new(1.0, 0.0),
+        //    Vec2::new(0.0, 1.0),
+        //    &tex,
+        //    width, height);
+        //draw_triangle_tex(&mut canvas, 
+        //    IVec2::new(550, 50), IVec2::new(50, 550), IVec2::new(550, 550),
+        //    Vec2::new(1.0, 0.0),
+        //    Vec2::new(0.0, 1.0),
+        //    Vec2::new(1.0, 1.0),
+        //    &tex,
+        //    width, height);
         let duration = start.elapsed();
+        //return;
         println!("Draw: {:?}", duration);
         // -------------------------------- //
 

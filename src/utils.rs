@@ -39,7 +39,7 @@ pub fn load_ppm(path: &str) -> (Vec<u32>, u32, u32) {
             .collect::<Vec<_>>();
 
         for i in (0..line.len()).step_by(3) {
-            result.push(u32::from_be_bytes([0xFF, line[i], line[i+1], line[i+2]]));
+            result.push(u32::from_be_bytes([0xFF, line[i+2], line[i+1], line[i+0]]));
         }
     }
 

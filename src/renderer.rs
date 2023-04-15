@@ -1,7 +1,7 @@
 use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles, Mat3};
 use std::collections::VecDeque;
 
-use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::*, camera::Camera};
+use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::*, camera::Camera, shapes_textured::draw_triangle_tex};
 
 pub struct Renderer {
     to_render: Vec<Triangle>,
@@ -60,9 +60,9 @@ impl Renderer {
 
             // Create tri to clip and project
             let tri_to_clip = Triangle::new(
-                Vertex::new(p1.xyz(), n1.xyz(), tri.v[0].texture, scale_color(tri.v[0].color, ambient_strength + lit1)),
-                Vertex::new(p2.xyz(), n2.xyz(), tri.v[1].texture, scale_color(tri.v[1].color, ambient_strength + lit2)),
-                Vertex::new(p3.xyz(), n3.xyz(), tri.v[2].texture, scale_color(tri.v[2].color, ambient_strength + lit3)),
+                Vertex::new(p1.xyz(), n1.xyz(), tri.v[0].texture, scale_color(tri.v[0].color, ambient_strength + lit1), lit1),
+                Vertex::new(p2.xyz(), n2.xyz(), tri.v[1].texture, scale_color(tri.v[1].color, ambient_strength + lit2), lit2),
+                Vertex::new(p3.xyz(), n3.xyz(), tri.v[2].texture, scale_color(tri.v[2].color, ambient_strength + lit3), lit3),
             );
 
             // Clip triangle
@@ -126,14 +126,30 @@ impl Renderer {
             z1.total_cmp(&z2)
         });
     }
-    pub fn draw(&mut self, canvas: &mut Canvas) {
+    pub fn draw(&mut self, canvas: &mut Canvas, texture: Option<&Vec<u32>>) {
         canvas.clear(0xFF020202);
-        for tri in self.to_render.iter() {
-            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
-        }
-        if self.wireframe {
+        if texture.is_some() {
             for tri in self.to_render.iter() {
-                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+                draw_triangle_tex(canvas, 
+                    tri.v[0].pos.xy().as_ivec2(),
+                    tri.v[1].pos.xy().as_ivec2(), 
+                    tri.v[2].pos.xy().as_ivec2(), 
+                    tri.v[0].texture,
+                    tri.v[1].texture, 
+                    tri.v[2].texture, 
+                    &texture.unwrap(),
+                    204, 206
+                );
+            }
+        }
+        else {
+            for tri in self.to_render.iter() {
+                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
+            }
+            if self.wireframe {
+                for tri in self.to_render.iter() {
+                    draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+                }
             }
         }
         println!("Rendered {} triangles.", self.to_render.len());

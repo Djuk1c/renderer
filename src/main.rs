@@ -43,7 +43,7 @@ fn main() {
         .unwrap();
     let mut sdl_canvas = window
         .into_canvas()
-        .present_vsync()    // So i dont have to calcualte deltatime for now
+        .present_vsync()
         .accelerated()
         .build()
         .map_err(|e| e.to_string())
@@ -61,18 +61,12 @@ fn main() {
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
-    let mut cow = Model::new("models/cube.obj");
-    let mut cube = Model::new("models/cube.obj");
-    let (tex, width, height) = load_ppm("textures/kak.ppm");
+    let mut obj = Model::new("models/gign.obj");
+    let (tex, width, height) = load_ppm("textures/gign.tex");
 
-    cow.translation.z = 30.0;
-    cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (45.0_f32).to_radians());
-    cow.scale = Vec3::new(10.0, 10.0, 10.0);
-    cube.translation.z = 6.0;
-    cube.translation.y = -1.5;
-    cube.translation.x = 1.0;
-    cube.scale = Vec3::new(0.1, 0.1, 0.1);
-    cube.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (45.0_f32).to_radians());
+    obj.translation.z = 24.5;
+    obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (165.0_f32).to_radians());
+    obj.scale = Vec3::new(10.0, 10.0, 10.0);
 
     let mut frame = 0;
     let mut last_mouse_x = 0.0;
@@ -139,10 +133,8 @@ fn main() {
         let start = Instant::now();
         // -------------------------------- //
         frame += 1;
-        cow.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
-        //cube.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32).to_radians());
-        renderer.process_model(&cow, &camera);
-        //renderer.process_model(&cube, &camera);
+        obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 2.0).to_radians());
+        renderer.process_model(&obj, &camera);
         renderer.depth_sort();
         let duration = start.elapsed();
         println!("Process: {:?}", duration);
@@ -165,7 +157,6 @@ fn main() {
         //    &tex,
         //    width, height);
         let duration = start.elapsed();
-        //return;
         println!("Draw: {:?}", duration);
         // -------------------------------- //
 

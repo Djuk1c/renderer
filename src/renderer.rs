@@ -129,7 +129,7 @@ impl Renderer {
     pub fn draw(&mut self, canvas: &mut Canvas, texture: Option<&Vec<u32>>) {
         canvas.clear(0xFF020202);
         if texture.is_some() {
-            for tri in self.to_render.iter() {
+            for (_, tri) in self.to_render.iter().enumerate() {
                 draw_triangle_tex(canvas, 
                     tri.v[0].pos.xy().as_ivec2(),
                     tri.v[1].pos.xy().as_ivec2(), 
@@ -138,7 +138,7 @@ impl Renderer {
                     tri.v[1].texture, 
                     tri.v[2].texture, 
                     &texture.unwrap(),
-                    204, 206
+                    512, 512
                 );
             }
         }
@@ -146,10 +146,12 @@ impl Renderer {
             for tri in self.to_render.iter() {
                 draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
             }
-            if self.wireframe {
-                for tri in self.to_render.iter() {
-                    draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
-                }
+        }
+
+        // Wireframe
+        if self.wireframe {
+            for tri in self.to_render.iter() {
+                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
             }
         }
         println!("Rendered {} triangles.", self.to_render.len());

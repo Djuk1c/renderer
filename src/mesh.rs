@@ -5,7 +5,7 @@ use std::io::{self, BufRead};
 const COLOR: u32 = 0xFF2020FF;
 //const COLOR: u32 = 0xFFB0B0B0;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct Vertex {
     pub pos: Vec3,
     pub normal: Vec3,
@@ -19,7 +19,7 @@ impl Vertex {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Triangle {
     pub v: [Vertex; 3],
 }

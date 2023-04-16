@@ -43,7 +43,7 @@ fn main() {
         .unwrap();
     let mut sdl_canvas = window
         .into_canvas()
-        .present_vsync()
+        //.present_vsync()
         .accelerated()
         .build()
         .map_err(|e| e.to_string())

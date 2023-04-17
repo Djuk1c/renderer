@@ -24,10 +24,10 @@ mod camera;
 mod shapes_textured;
 
 // TODO:
-// textures, zbuffer, animations, specular light, color struct, fog, light color
+// fix texture bug, zbuffer, animations, specular light, color struct, fog, light color
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
-// smooth shading, camera, fix screen clipping lighting
+// smooth shading, camera, fix screen clipping lighting, textures
 
 fn main() {
     // SDL Init

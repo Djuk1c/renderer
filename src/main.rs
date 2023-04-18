@@ -8,12 +8,11 @@ use sdl2::pixels::PixelFormatEnum;
 
 use canvas::{Canvas, HEIGHT, WIDTH, W_WIDTH, W_HEIGHT};
 use renderer::Renderer;
-//use shapes::{draw_line, draw_triangle};
 use shapes_textured::*;
-use utils::{default_mat_proj, load_ppm};
+use utils::{default_mat_proj};
 use camera::*;
 
-//mod shapes;
+mod shapes;
 mod utils;
 mod mesh;
 mod canvas;
@@ -24,11 +23,11 @@ mod camera;
 mod shapes_textured;
 
 // TODO:
-// raster data vector, zbuffer, animations, specular light, color struct, fog, light color
+// raster data vector, animations, specular light, color struct, fog, light color
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
 // smooth shading, camera, fix screen clipping lighting, textures, fix texture bug
-// flip horizontal and rotate 180 texture (wrote bash), texture lit, clipping lit update, 
+// flip horizontal and rotate 180 texture (wrote bash), texture lit, clipping lit update, zbuffer, 
 
 fn main() {
     // SDL Init
@@ -61,13 +60,10 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.50, 0.75);
-    let mut obj = Model::new("models/viking_room.obj");
-    let (tex, width, height) = load_ppm("textures/viking_room.tex");
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 2.5), 0.50, 0.75);
 
-    obj.translation.z = 24.5;
-    obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (165.0_f32).to_radians());
-    obj.scale = Vec3::new(10.0, 10.0, 10.0);
+    let obj_tex = renderer.load_texture("textures/arctic.tex");
+    let mut obj = Model::new("models/arctic_run.obj", obj_tex);
 
     let mut frame = 0;
     let mut last_mouse_x = 0.0;
@@ -95,31 +91,15 @@ fn main() {
             .filter_map(Keycode::from_scancode)
             .collect();
         // Move
-        if keys.contains(&Keycode::W) {
-            camera.move_forward();
-        }
-        if keys.contains(&Keycode::S) {
-            camera.move_backward();
-        }
-        if keys.contains(&Keycode::A) {
-            camera.move_left();
-        }
-        if keys.contains(&Keycode::D) {
-            camera.move_right();
-        }
+        if keys.contains(&Keycode::W) { camera.move_forward(); }
+        if keys.contains(&Keycode::S) { camera.move_backward(); }
+        if keys.contains(&Keycode::A) { camera.move_left(); }
+        if keys.contains(&Keycode::D) { camera.move_right(); }
         // Look
-        if keys.contains(&Keycode::Up) {
-            camera.look(0.0, 2.0);
-        }
-        if keys.contains(&Keycode::Down) {
-            camera.look(0.0, -2.0);
-        }
-        if keys.contains(&Keycode::Left) {
-            camera.look(2.0, 0.0);
-        }
-        if keys.contains(&Keycode::Right) {
-            camera.look(-2.0, 0.0);
-        }
+        if keys.contains(&Keycode::Up) { camera.look(0.0, 2.0); }
+        if keys.contains(&Keycode::Down) { camera.look(0.0, -2.0); }
+        if keys.contains(&Keycode::Left) { camera.look(2.0, 0.0); }
+        if keys.contains(&Keycode::Right) { camera.look(-2.0, 0.0); }
 
         let mouse_x = event_pump.mouse_state().x() as f32;
         let mouse_y = event_pump.mouse_state().y() as f32;
@@ -132,34 +112,16 @@ fn main() {
         // END Process input
 
         let start = Instant::now();
-        // -------------------------------- //
         frame += 1;
-        obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 2.0).to_radians());
-        renderer.process_model(&obj, &camera);
-        //renderer.depth_sort();
-        let duration = start.elapsed();
-        println!("Process: {:?}", duration);
+        canvas.clear(0xFF020202);
 
-        let start = Instant::now();
-        renderer.draw(&mut canvas, Some(&tex));
-        //draw_line(&mut canvas, IVec2::new(420, 20), IVec2::new(311, 102), 0xFFFF0000, 0xFF0000FF, None);
-        //draw_triangle_tex(&mut canvas, 
-        //    IVec2::new(200, 200), IVec2::new(550, 100), IVec2::new(400, 550),
-        //    Vec2::new(0.0, 0.0),
-        //    Vec2::new(1.0, 0.0),
-        //    Vec2::new(0.0, 1.0),
-        //    &tex,
-        //    width, height);
-        //draw_triangle_tex(&mut canvas, 
-        //    IVec2::new(550, 50), IVec2::new(50, 550), IVec2::new(550, 550),
-        //    Vec2::new(1.0, 0.0),
-        //    Vec2::new(0.0, 1.0),
-        //    Vec2::new(1.0, 1.0),
-        //    &tex,
-        //    width, height);
-        let duration = start.elapsed();
-        println!("Draw: {:?}", duration);
+        // -----------GAME LOOP------------ //
+        obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 2.0).to_radians());
+        renderer.draw(&obj, &camera, &mut canvas);
         // -------------------------------- //
+
+        let duration = start.elapsed();
+        println!("Frametime: {:?}", duration);
 
         // Draw on SDL 
         // TODO: Optimize this

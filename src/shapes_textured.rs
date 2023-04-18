@@ -9,7 +9,7 @@ use std::{collections::hash_map::Entry, collections::HashMap};
 
 pub fn draw_triangle_tex(
     canvas: &mut Canvas,
-    tri: &mut Triangle,
+    tri: &Triangle,
     texture: &Vec<u32>,
     tex_w: u32,
     tex_h: u32,
@@ -75,7 +75,7 @@ pub fn draw_line_tex(
         } else if t2.y > t1.y {
             tex_step_y = t1.y + (i as f32 * ((t2.y - t1.y).abs() / length as f32));
         } 
-        let (tx, ty) = (((tex_w - 1) as f32 * tex_step_x) as u32, ((tex_h - 1) as f32 * tex_step_y) as u32);
+        let (tx, ty) = (((tex_w - 1) as f32 * tex_step_x).round() as u32, ((tex_h - 1) as f32 * tex_step_y).round() as u32);
         //println!("tex: {:?} {:?} | i: {} | texstep: {} {} | texcoord: {} {} | length: {}", t1, t2, i, tex_step_x, tex_step_y, tx, ty, length);
 
         // Calculate light step

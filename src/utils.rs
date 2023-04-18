@@ -23,7 +23,7 @@ pub fn save_to_ppm<const SIZE: usize>(pixels: [u32; SIZE]) {
     }
 }
 
-pub fn load_ppm(path: &str) -> (Vec<u32>, u32, u32) {
+pub fn load_pixels(path: &str) -> (Vec<u32>, u32, u32) {
     // P3
     let mut result = Vec::<u32>::new();
     let (width, height): (u32, u32);

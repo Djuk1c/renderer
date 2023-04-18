@@ -1,3 +1,4 @@
+// Doesn't calculate Z for the depth buffer, used only for wireframe rn
 #![allow(dead_code)]
 use std::cmp;
 use glam::IVec2;
@@ -19,9 +20,6 @@ pub fn draw_triangle(
     let raster_data_size = cmp::max(cmp::max(p1.y, p2.y), p3.y) - cmp::min(cmp::min(p1.y, p2.y), p3.y) + 1;
     let mut raster_data: HashMap<i32, (i32, i32)> = HashMap::with_capacity(raster_data_size as usize);
 
-    // For each draw point in lines
-    // Store the lowest and highest X for each Y
-    // Draw horizontal lines from that data (Scanline)
     if fill {
         draw_line(canvas, p1, p2, color1, color2, Some(&mut raster_data));
         draw_line(canvas, p1, p3, color1, color3, Some(&mut raster_data));
@@ -66,11 +64,8 @@ pub fn draw_line(
         let c1 = scale_color(color1, d1);
         let c2 = scale_color(color2, d2);
         let color = add_colors(c1, c2);
-        canvas.put_pixel(current_x, current_y, color);
+        canvas.put_pixel(current_x, current_y, 1000.0, color);
 
-        // Scanline
-        // Store min_x and max_y for each Y, so i can later draw hor lines and fill the triangle
-        // https://www.youtube.com/watch?v=t7Ztio8cwqM
         if raster_data.is_some() {
             let raster_data = raster_data.as_mut().unwrap();
             match raster_data.entry(current_y) {
@@ -98,61 +93,61 @@ pub fn draw_line(
 }
 
 // TODO: Use IVec2
-pub fn draw_circle<const SIZE: usize>(
-    canvas: &mut Canvas,
-    x: i32,
-    y: i32,
-    r: i32,
-    color: u32,
-    fill: bool,
-) {
-    for ry in y - r..y + r + 1 {
-        if 0 < ry && ry < HEIGHT as i32 {
-            for rx in x - r..x + r + 1 {
-                if 0 < rx && rx < WIDTH as i32 {
-                    let dx = rx - x;
-                    let dy = ry - y;
-                    if !fill {
-                        // TODO: Rewrite this with brain
-                        let val = (dx * dx + dy * dy) - (r * r);
-                        if val > 0 && val <= r * 2 {
-                            canvas.put_pixel(rx, ry, color);
-                        }
-                    } else {
-                        if dx * dx + dy * dy <= r * r {
-                            canvas.put_pixel(rx, ry, color);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// TODO: Use IVec2
-pub fn draw_rectangle<const SIZE: usize>(
-    canvas: &mut Canvas,
-    x: i32,
-    y: i32,
-    w: i32,
-    h: i32,
-    color: u32,
-    fill: bool,
-) {
-    for ry in y..y + h {
-        if 0 < ry && ry < HEIGHT as i32 {
-            for rx in x..x + w {
-                if 0 < rx && rx < WIDTH as i32 {
-                    if !fill {
-                        // TODO: Lots of wasted iterations, perhaps a faster algorithm exists
-                        if ry == y || ry == y + h - 1 || rx == x || rx == x + h - 1 {
-                            canvas.put_pixel(rx, ry, color);
-                        }
-                    } else {
-                        canvas.put_pixel(rx, ry, color);
-                    }
-                }
-            }
-        }
-    }
-}
+//pub fn draw_circle<const SIZE: usize>(
+//    canvas: &mut Canvas,
+//    x: i32,
+//    y: i32,
+//    r: i32,
+//    color: u32,
+//    fill: bool,
+//) {
+//    for ry in y - r..y + r + 1 {
+//        if 0 < ry && ry < HEIGHT as i32 {
+//            for rx in x - r..x + r + 1 {
+//                if 0 < rx && rx < WIDTH as i32 {
+//                    let dx = rx - x;
+//                    let dy = ry - y;
+//                    if !fill {
+//                        // TODO: Rewrite this with brain
+//                        let val = (dx * dx + dy * dy) - (r * r);
+//                        if val > 0 && val <= r * 2 {
+//                            canvas.put_pixel(rx, ry, color);
+//                        }
+//                    } else {
+//                        if dx * dx + dy * dy <= r * r {
+//                            canvas.put_pixel(rx, ry, color);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//// TODO: Use IVec2
+//pub fn draw_rectangle<const SIZE: usize>(
+//    canvas: &mut Canvas,
+//    x: i32,
+//    y: i32,
+//    w: i32,
+//    h: i32,
+//    color: u32,
+//    fill: bool,
+//) {
+//    for ry in y..y + h {
+//        if 0 < ry && ry < HEIGHT as i32 {
+//            for rx in x..x + w {
+//                if 0 < rx && rx < WIDTH as i32 {
+//                    if !fill {
+//                        // TODO: Lots of wasted iterations, perhaps a faster algorithm exists
+//                        if ry == y || ry == y + h - 1 || rx == x || rx == x + h - 1 {
+//                            canvas.put_pixel(rx, ry, color);
+//                        }
+//                    } else {
+//                        canvas.put_pixel(rx, ry, color);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

@@ -96,7 +96,7 @@ pub fn draw_line_tex(
                     }
                     cur
                 }
-                Entry::Vacant(v) => v.insert((current_x, current_x, tex_step_x, tex_step_y, tex_step_x, tex_step_x)),
+                Entry::Vacant(v) => v.insert((current_x, current_x, tex_step_x, tex_step_y, tex_step_x, tex_step_y)),
             };
         }
 

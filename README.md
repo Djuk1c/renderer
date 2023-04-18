@@ -1,5 +1,5 @@
 # 3D Software Renderer in Rust
-![alt showcase](https://s11.gifyu.com/images/ezgif.com-gif-makerf7d4858ecfe92130.gif)
+![alt showcase](readme.gif)
 Simple software renderer implemented in rust from ([pretty much](#Dependencies)) scratch without the use of the graphics API, with the goal to understand how does the GPU work.
 # Features
 - [x] Depth buffering

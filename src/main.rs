@@ -8,12 +8,12 @@ use sdl2::pixels::PixelFormatEnum;
 
 use canvas::{Canvas, HEIGHT, WIDTH, W_WIDTH, W_HEIGHT};
 use renderer::Renderer;
-use shapes::{draw_line, draw_triangle};
+//use shapes::{draw_line, draw_triangle};
 use shapes_textured::*;
 use utils::{default_mat_proj, load_ppm};
 use camera::*;
 
-mod shapes;
+//mod shapes;
 mod utils;
 mod mesh;
 mod canvas;
@@ -61,9 +61,9 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
-    let mut obj = Model::new("models/arctic_run.obj");
-    let (tex, width, height) = load_ppm("textures/arctic.tex");
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.50, 0.75);
+    let mut obj = Model::new("models/viking_room.obj");
+    let (tex, width, height) = load_ppm("textures/viking_room.tex");
 
     obj.translation.z = 24.5;
     obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (165.0_f32).to_radians());
@@ -136,7 +136,7 @@ fn main() {
         frame += 1;
         obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 2.0).to_radians());
         renderer.process_model(&obj, &camera);
-        renderer.depth_sort();
+        //renderer.depth_sort();
         let duration = start.elapsed();
         println!("Process: {:?}", duration);
 

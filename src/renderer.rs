@@ -1,7 +1,7 @@
 use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles, Mat3};
 use std::collections::VecDeque;
 
-use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::*, camera::Camera, shapes_textured::draw_triangle_tex};
+use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, utils::*, camera::Camera, shapes_textured::draw_triangle_tex};
 
 pub struct Renderer {
     to_render: Vec<Triangle>,
@@ -129,34 +129,26 @@ impl Renderer {
         canvas.clear(0xFF020202);
         if texture.is_some() {
             let texture = texture.unwrap();
-            for (_, tri) in self.to_render.iter().enumerate() {
+            for (_, tri) in self.to_render.iter_mut().enumerate() {
                 draw_triangle_tex(canvas, 
-                    tri.v[0].pos.xy().as_ivec2(),
-                    tri.v[1].pos.xy().as_ivec2(), 
-                    tri.v[2].pos.xy().as_ivec2(), 
-                    tri.v[0].texture,
-                    tri.v[1].texture, 
-                    tri.v[2].texture, 
-                    tri.v[0].lit,
-                    tri.v[1].lit,
-                    tri.v[2].lit,
+                    tri,
                     texture,
-                    512, 512
+                    1024, 1024
                 );
             }
         }
-        else {
-            for tri in self.to_render.iter() {
-                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
-            }
-        }
+        //else {
+        //    for tri in self.to_render.iter() {
+        //        draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
+        //    }
+        //}
 
-        // Wireframe
-        if self.wireframe {
-            for tri in self.to_render.iter() {
-                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
-            }
-        }
+        //// Wireframe
+        //if self.wireframe {
+        //    for tri in self.to_render.iter() {
+        //        draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+        //    }
+        //}
         println!("Rendered {} triangles.", self.to_render.len());
         self.to_render.clear();
     }

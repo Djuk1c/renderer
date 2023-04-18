@@ -57,14 +57,17 @@ pub fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Tria
         new.v[0].pos = inside_points[0].pos;
         new.v[0].color = inside_points[0].color;
         new.v[0].texture = inside_points[0].texture;
+        new.v[0].lit = inside_points[0].lit;
 
         new.v[1].pos = vector_intersect_plane(plane, plane_n, &inside_points[0].pos, &outside_points[0].pos, &mut t);
         new.v[1].color = add_colors(scale_color(inside_points[0].color, 1.0-t), scale_color(outside_points[0].color, t));
         new.v[1].texture = t * (outside_points[0].texture - inside_points[0].texture) + inside_points[0].texture;
+        new.v[1].lit = inside_points[0].lit * (1.0-t) + outside_points[0].lit * t;
 
         new.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[0].pos, &outside_points[1].pos, &mut t);
         new.v[2].color = add_colors(scale_color(inside_points[0].color, 1.0-t), scale_color(outside_points[1].color, t));
         new.v[2].texture = t * (outside_points[1].texture - inside_points[0].texture) + inside_points[0].texture;
+        new.v[2].lit = inside_points[0].lit * (1.0-t) + outside_points[1].lit * t;
 
         result.push(new);
     } else if inside_points.len() == 2 && outside_points.len() == 1 {
@@ -75,27 +78,33 @@ pub fn clip_triangle(tri: &Triangle, plane: &Vec3, plane_n: &Vec3) -> Vec::<Tria
         new_0.v[0].pos = inside_points[0].pos;
         new_0.v[0].color = inside_points[0].color;
         new_0.v[0].texture = inside_points[0].texture;
+        new_0.v[0].lit = inside_points[0].lit;
 
         new_0.v[1].pos = inside_points[1].pos;
         new_0.v[1].color = inside_points[1].color;
         new_0.v[1].texture = inside_points[1].texture;
+        new_0.v[1].lit = inside_points[1].lit;
 
         new_0.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[0].pos, &outside_points[0].pos, &mut t);
         new_0.v[2].color = add_colors(scale_color(inside_points[0].color, 1.0-t), scale_color(outside_points[0].color, t));
         new_0.v[2].texture = t * (outside_points[0].texture - inside_points[0].texture) + inside_points[0].texture;
+        new_0.v[2].lit = inside_points[0].lit * (1.0-t) + outside_points[0].lit * t;
 
         // Second triangle
         new_1.v[0].pos = inside_points[1].pos;
         new_1.v[0].color = inside_points[1].color;
         new_1.v[0].texture = inside_points[1].texture;
+        new_1.v[0].lit = inside_points[1].lit;
 
         new_1.v[1].pos = new_0.v[2].pos;
         new_1.v[1].color = new_0.v[2].color;
         new_1.v[1].texture = new_0.v[2].texture;
+        new_1.v[1].lit = new_0.v[2].lit;
 
         new_1.v[2].pos = vector_intersect_plane(plane, plane_n, &inside_points[1].pos, &outside_points[0].pos, &mut t);
         new_1.v[2].color = add_colors(scale_color(inside_points[1].color, 1.0-t), scale_color(outside_points[0].color, t));
         new_1.v[2].texture = t * (outside_points[0].texture - inside_points[1].texture) + inside_points[1].texture;
+        new_1.v[2].lit = inside_points[1].lit * (1.0-t) + outside_points[0].lit * t;
 
         result.push(new_0);
         result.push(new_1);

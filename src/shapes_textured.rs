@@ -8,25 +8,21 @@ use std::{collections::hash_map::Entry, collections::HashMap};
 
 pub fn draw_triangle_tex(
     canvas: &mut Canvas,
-    mut p1: IVec2,
-    mut p2: IVec2,
-    mut p3: IVec2,
-    mut t1: Vec2,
-    mut t2: Vec2,
-    mut t3: Vec2,
-    mut l1: f32,
-    mut l2: f32,
-    mut l3: f32,
+    p1: IVec2,
+    p2: IVec2,
+    p3: IVec2,
+    t1: Vec2,
+    t2: Vec2,
+    t3: Vec2,
+    l1: f32,
+    l2: f32,
+    l3: f32,
     texture: &Vec<u32>,
     tex_w: u32,
     tex_h: u32,
 ) {
     let raster_data_size = cmp::max(cmp::max(p1.y, p2.y), p3.y) - cmp::min(cmp::min(p1.y, p2.y), p3.y) + 1;
     let mut raster_data: HashMap<i32, (i32, i32, f32, f32, f32, f32, f32, f32)> = HashMap::with_capacity(raster_data_size as usize);
-
-    if p2.x < p1.x { mem::swap(&mut p2, &mut p1); mem::swap(&mut t2, &mut t1); mem::swap(&mut l2, &mut l1); }
-    if p3.x < p1.x { mem::swap(&mut p3, &mut p1); mem::swap(&mut t3, &mut t1); mem::swap(&mut l3, &mut l1); }
-    if p3.x < p2.x { mem::swap(&mut p3, &mut p2); mem::swap(&mut t3, &mut t2); mem::swap(&mut l3, &mut l2); }
 
     draw_line_tex(canvas, p1, p2, t1, t2, l1, l2, texture, tex_w, tex_h, Some(&mut raster_data));
     draw_line_tex(canvas, p1, p3, t1, t3, l1, l3, texture, tex_w, tex_h, Some(&mut raster_data));

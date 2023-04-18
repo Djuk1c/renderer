@@ -30,7 +30,6 @@ impl Renderer {
             let n2 = (mod_tran_inv * tri.v[1].normal).normalize();
             let n3 = (mod_tran_inv * tri.v[2].normal).normalize();
 
-            let light_color: u32 = 0xFFFFFFFF;
             // Ambient light
             let ambient_strength = 0.05;
 
@@ -129,6 +128,7 @@ impl Renderer {
     pub fn draw(&mut self, canvas: &mut Canvas, texture: Option<&Vec<u32>>) {
         canvas.clear(0xFF020202);
         if texture.is_some() {
+            let texture = texture.unwrap();
             for (_, tri) in self.to_render.iter().enumerate() {
                 draw_triangle_tex(canvas, 
                     tri.v[0].pos.xy().as_ivec2(),
@@ -140,7 +140,7 @@ impl Renderer {
                     tri.v[0].lit,
                     tri.v[1].lit,
                     tri.v[2].lit,
-                    &texture.unwrap(),
+                    texture,
                     512, 512
                 );
             }

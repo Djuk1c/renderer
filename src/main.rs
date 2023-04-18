@@ -24,11 +24,11 @@ mod camera;
 mod shapes_textured;
 
 // TODO:
-// raster data vector, clipping lit update, unwrap tuple, zbuffer, animations, specular light, color struct, fog, light color
+// raster data vector, zbuffer, animations, specular light, color struct, fog, light color
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
 // smooth shading, camera, fix screen clipping lighting, textures, fix texture bug
-// flip horizontal and rotate 180 texture (wrote bash), texture lit, 
+// flip horizontal and rotate 180 texture (wrote bash), texture lit, clipping lit update, 
 
 fn main() {
     // SDL Init

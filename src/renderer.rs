@@ -137,6 +137,9 @@ impl Renderer {
                     tri.v[0].texture,
                     tri.v[1].texture, 
                     tri.v[2].texture, 
+                    tri.v[0].lit,
+                    tri.v[1].lit,
+                    tri.v[2].lit,
                     &texture.unwrap(),
                     512, 512
                 );

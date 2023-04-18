@@ -1,23 +1,26 @@
 use glam::{Mat4, Vec3, Vec4Swizzles, Vec3Swizzles, Mat3};
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 
-use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, shapes::draw_triangle, utils::*, camera::Camera, shapes_textured::draw_triangle_tex};
+use crate::{mesh::{Triangle, Vertex}, model::Model, clipping::clip_triangle, canvas::{Canvas, HEIGHT, WIDTH}, utils::*, camera::Camera, shapes::*, shapes_textured::draw_triangle_tex};
 
 pub struct Renderer {
-    to_render: Vec<Triangle>,
     mat_proj: Mat4,
     pub wireframe: bool,
+    pub textures: HashMap<i32, (Vec<u32>, u32, u32)>,
+    pub tex_num: i32,
 }
 impl Renderer {
     pub fn new(proj: Mat4) -> Self {
         Self {
-            to_render: Vec::<Triangle>::new(),
             mat_proj: proj,
             wireframe: false,
+            textures: HashMap::new(),
+            tex_num: 0
         }
     }
-    pub fn process_model(&mut self, model: &Model, camera: &Camera) {
-        let mut to_clip = Vec::<Triangle>::with_capacity(self.to_render.len());
+    pub fn draw(&mut self, model: &Model, camera: &Camera, canvas: &mut Canvas) {
+        //let mut to_clip = Vec::<Triangle>::with_capacity(self.to_render.len());
+        let mut to_clip = Vec::<Triangle>::new();
         let mat_model = model.get_model_mat();
 
         for tri in model.mesh.triangles.iter() {
@@ -30,7 +33,6 @@ impl Renderer {
             let n2 = (mod_tran_inv * tri.v[1].normal).normalize();
             let n3 = (mod_tran_inv * tri.v[2].normal).normalize();
 
-            let light_color: u32 = 0xFFFFFFFF;
             // Ambient light
             let ambient_strength = 0.05;
 
@@ -113,51 +115,75 @@ impl Renderer {
                 }
                 new_triangles = queue.len();
             }
-            for clipped in queue {
-                self.to_render.push(clipped);
+            for tri in queue.iter() {
+                if self.wireframe {
+                    draw_triangle(
+                        canvas,
+                        tri.v[0].pos.xy().as_ivec2(),
+                        tri.v[1].pos.xy().as_ivec2(),
+                        tri.v[2].pos.xy().as_ivec2(),
+                        0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+                }
+                if model.texture_index != -1 {
+                    let texture = self.textures.get(&model.texture_index).unwrap();
+                    draw_triangle_tex(canvas, 
+                        tri,
+                        &texture.0,
+                        texture.1, texture.2
+                    );
+                } else {
+                    draw_triangle(canvas,
+                        tri.v[0].pos.xy().as_ivec2(),
+                        tri.v[1].pos.xy().as_ivec2(),
+                        tri.v[2].pos.xy().as_ivec2(),
+                        tri.v[0].color,
+                        tri.v[1].color,
+                        tri.v[2].color,
+                        true);
+                }
             }
         }
     }
-    pub fn depth_sort(&mut self) {
-        // Painters algorithm, depth sorting
-        self.to_render.sort_by(|a, b| {
-            let z1 = (a.v[0].pos.z + a.v[1].pos.z + a.v[2].pos.z) / 3.0;
-            let z2 = (b.v[0].pos.z + b.v[1].pos.z + b.v[2].pos.z) / 3.0;
-            z1.total_cmp(&z2)
-        });
+    pub fn load_texture(&mut self, path: &str) -> i32 {
+        let (pixels, width, height) = load_pixels(path);
+        self.textures.insert(self.tex_num, (pixels, width, height));
+        let cur = self.tex_num;
+        self.tex_num += 1;
+        return cur; 
     }
-    pub fn draw(&mut self, canvas: &mut Canvas, texture: Option<&Vec<u32>>) {
-        canvas.clear(0xFF020202);
-        if texture.is_some() {
-            for (_, tri) in self.to_render.iter().enumerate() {
-                draw_triangle_tex(canvas, 
-                    tri.v[0].pos.xy().as_ivec2(),
-                    tri.v[1].pos.xy().as_ivec2(), 
-                    tri.v[2].pos.xy().as_ivec2(), 
-                    tri.v[0].texture,
-                    tri.v[1].texture, 
-                    tri.v[2].texture, 
-                    tri.v[0].lit,
-                    tri.v[1].lit,
-                    tri.v[2].lit,
-                    &texture.unwrap(),
-                    512, 512
-                );
-            }
-        }
-        else {
-            for tri in self.to_render.iter() {
-                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
-            }
-        }
+    //pub fn depth_sort(&mut self) {
+    //    // Painters algorithm, depth sorting
+    //    self.to_render.sort_by(|a, b| {
+    //        let z1 = (a.v[0].pos.z + a.v[1].pos.z + a.v[2].pos.z) / 3.0;
+    //        let z2 = (b.v[0].pos.z + b.v[1].pos.z + b.v[2].pos.z) / 3.0;
+    //        z1.total_cmp(&z2)
+    //    });
+    //}
+    //pub fn draw(&mut self, canvas: &mut Canvas, texture: Option<&Vec<u32>>) {
+    //    canvas.clear(0xFF020202);
+    //    if texture.is_some() {
+    //        let texture = texture.unwrap();
+    //        for (_, tri) in self.to_render.iter_mut().enumerate() {
+    //            draw_triangle_tex(canvas, 
+    //                tri,
+    //                texture,
+    //                1024, 1024
+    //            );
+    //        }
+    //    }
+    //    else {
+    //        for tri in self.to_render.iter() {
+    //            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), tri.v[0].color, tri.v[1].color, tri.v[2].color, true);
+    //        }
+    //    }
 
-        // Wireframe
-        if self.wireframe {
-            for tri in self.to_render.iter() {
-                draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
-            }
-        }
-        println!("Rendered {} triangles.", self.to_render.len());
-        self.to_render.clear();
-    }
+    //    // Wireframe
+    //    if self.wireframe {
+    //        for tri in self.to_render.iter() {
+    //            draw_triangle(canvas, tri.v[0].pos.xy().as_ivec2(), tri.v[1].pos.xy().as_ivec2(), tri.v[2].pos.xy().as_ivec2(), 0xFF00FF00, 0xFF00FF00, 0xFF00FF00, false);
+    //        }
+    //    }
+    //    println!("Rendered {} triangles.", self.to_render.len());
+    //    self.to_render.clear();
+    //}
 }

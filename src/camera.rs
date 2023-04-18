@@ -14,7 +14,7 @@ impl Camera {
         Self {
             pos, 
             speed,
-            front: Vec3::new(0.0, 0.0, -1.0),
+            front: Vec3::new(0.0, 0.0, 1.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             sensitivity,
             yaw: 270.0,

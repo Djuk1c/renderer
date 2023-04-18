@@ -1,5 +1,6 @@
+#![allow(dead_code)]
 use std::cmp;
-use glam::{IVec2, Vec2};
+use glam::IVec2;
 
 use crate::canvas::{Canvas, WIDTH, HEIGHT};
 use crate::utils::{scale_color, add_colors};
@@ -96,7 +97,6 @@ pub fn draw_line(
     }
 }
 
-#[allow(dead_code)]
 // TODO: Use IVec2
 pub fn draw_circle<const SIZE: usize>(
     canvas: &mut Canvas,
@@ -129,7 +129,6 @@ pub fn draw_circle<const SIZE: usize>(
     }
 }
 
-#[allow(dead_code)]
 // TODO: Use IVec2
 pub fn draw_rectangle<const SIZE: usize>(
     canvas: &mut Canvas,

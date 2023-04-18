@@ -60,10 +60,14 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 2.5), 0.50, 0.75);
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 2.5), 0.10, 0.15);
 
     let obj_tex = renderer.load_texture("textures/arctic.raw");
     let mut obj = Model::new("models/arctic_run.obj", obj_tex);
+    let mut obj2 = Model::new("models/arctic.obj", obj_tex);
+    obj.translation.x = 0.85;
+    obj2.translation.x = -0.85;
+    obj2.translation.y = 0.2;
 
     let mut frame = 0;
     let mut last_mouse_x = 0.0;
@@ -95,11 +99,11 @@ fn main() {
         if keys.contains(&Keycode::S) { camera.move_backward(); }
         if keys.contains(&Keycode::A) { camera.move_left(); }
         if keys.contains(&Keycode::D) { camera.move_right(); }
-        // Look
-        if keys.contains(&Keycode::Up) { camera.look(0.0, 2.0); }
-        if keys.contains(&Keycode::Down) { camera.look(0.0, -2.0); }
-        if keys.contains(&Keycode::Left) { camera.look(2.0, 0.0); }
-        if keys.contains(&Keycode::Right) { camera.look(-2.0, 0.0); }
+        // Look keys
+        if keys.contains(&Keycode::Up) { camera.look(0.0, 10.0); }
+        if keys.contains(&Keycode::Down) { camera.look(0.0, -10.0); }
+        if keys.contains(&Keycode::Left) { camera.look(10.0, 0.0); }
+        if keys.contains(&Keycode::Right) { camera.look(-10.0, 0.0); }
 
         let mouse_x = event_pump.mouse_state().x() as f32;
         let mouse_y = event_pump.mouse_state().y() as f32;
@@ -116,8 +120,10 @@ fn main() {
         canvas.clear(0xFF020202);
 
         // -----------GAME LOOP------------ //
-        obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 2.0).to_radians());
+        obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (frame as f32 / 0.9).to_radians());
+        obj2.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (-frame as f32 / 0.9).to_radians());
         renderer.draw(&obj, &camera, &mut canvas);
+        renderer.draw(&obj2, &camera, &mut canvas);
         // -------------------------------- //
 
         let duration = start.elapsed();

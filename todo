@@ -1,3 +1,0 @@
-renderer load texture, returns an index
-model draw (texindex)
-pass triangle to draw_triangle_tex

@@ -24,10 +24,11 @@ mod camera;
 mod shapes_textured;
 
 // TODO:
-// fix texture bug, zbuffer, animations, specular light, color struct, fog, light color
+// texture lit, zbuffer, animations, specular light, color struct, fog, light color
 // DONE:
 // Normal face culling, Depth sorting, Near and Viewport clipping, lighting, color interpolation,
-// smooth shading, camera, fix screen clipping lighting, textures
+// smooth shading, camera, fix screen clipping lighting, textures, fix texture bug
+// flip horizontal and rotate 180 texture (wrote bash)
 
 fn main() {
     // SDL Init
@@ -61,8 +62,8 @@ fn main() {
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 0.0), 0.25, 0.25);
-    let mut obj = Model::new("models/gign.obj");
-    let (tex, width, height) = load_ppm("textures/gign.tex");
+    let mut obj = Model::new("models/arctic_run.obj");
+    let (tex, width, height) = load_ppm("textures/arctic.tex");
 
     obj.translation.z = 24.5;
     obj.rotation = Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), (165.0_f32).to_radians());

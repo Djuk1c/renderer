@@ -37,7 +37,7 @@ impl Renderer {
             let ambient_strength = 0.05;
 
             // Diffuse light
-            let dir_light = Vec3::new(0.0, 0.0, 1.0).normalize();
+            let dir_light = Vec3::new(0.0, 0.0, -1.0).normalize();
             let lit1 = Vec3::dot(n1, (dir_light - p1.xyz()).normalize()).clamp(0.0, 1.0);
             let lit2 = Vec3::dot(n2, (dir_light - p2.xyz()).normalize()).clamp(0.0, 1.0);
             let lit3 = Vec3::dot(n3, (dir_light - p3.xyz()).normalize()).clamp(0.0, 1.0);

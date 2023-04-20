@@ -60,7 +60,7 @@ fn main() {
 
     let mut canvas = Canvas::new();
     let mut renderer = Renderer::new(default_mat_proj());
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 2.5), 0.10, 0.15);
+    let mut camera = Camera::new(Vec3::new(0.0, 0.0, -2.5), 0.10, 0.15);
 
     let obj_tex = renderer.load_texture("textures/arctic.raw");
     let mut obj = Model::new("models/arctic_run.obj", obj_tex);

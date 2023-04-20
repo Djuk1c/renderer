@@ -46,6 +46,8 @@ pub fn draw_triangle_tex(
     }
 }
 
+// Inlining this seems to boost performance by ~1ms
+#[inline(always)]
 pub fn draw_line_tex(
     canvas: &mut Canvas,
     p1: IVec2,

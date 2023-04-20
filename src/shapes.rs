@@ -38,6 +38,7 @@ pub fn draw_triangle(
     }
 }
 
+#[inline(always)]
 pub fn draw_line(
     canvas: &mut Canvas,
     p1: IVec2,

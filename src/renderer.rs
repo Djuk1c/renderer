@@ -129,7 +129,7 @@ impl Renderer {
                     draw_triangle_tex(canvas, 
                         tri,
                         &texture.0,
-                        texture.1, texture.2
+                        (texture.1, texture.2)
                     );
                 } else {
                     draw_triangle(canvas,

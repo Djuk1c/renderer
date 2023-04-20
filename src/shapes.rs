@@ -1,4 +1,4 @@
-// Doesn't calculate Z for the depth buffer, used only for wireframe rn
+// Not really mantained, using this ONLY to draw wireframe
 #![allow(dead_code)]
 use std::cmp;
 use glam::IVec2;
@@ -64,7 +64,7 @@ pub fn draw_line(
         let c1 = scale_color(color1, d1);
         let c2 = scale_color(color2, d2);
         let color = add_colors(c1, c2);
-        canvas.put_pixel(current_x, current_y, 1000.0, color);
+        canvas.put_pixel(current_x, current_y, f32::MAX, color);
 
         if raster_data.is_some() {
             let raster_data = raster_data.as_mut().unwrap();
